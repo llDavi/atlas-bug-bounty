@@ -41,6 +41,18 @@ def get_programs():
     return _cache["programs"]
 
 
+def _warm_cache():
+    """Populate the cache as soon as the process boots, so the first real
+    request doesn't have to block on a synchronous multi-platform fetch."""
+    try:
+        programs = _fetch_all()
+        if programs:
+            _cache["programs"] = programs
+            _cache["fetched_at"] = time.time()
+    except Exception as exc:
+        print(f"[aggregator] initial warm-up failed: {exc}")
+
+
 def _background_refresh_loop():
     """Pre-warm the cache 2 minutes before expiry so no request ever blocks on a cold fetch."""
     while True:
@@ -57,4 +69,5 @@ def _background_refresh_loop():
                 print(f"[aggregator] background refresh failed: {exc}")
 
 
+threading.Thread(target=_warm_cache, daemon=True).start()
 threading.Thread(target=_background_refresh_loop, daemon=True).start()
