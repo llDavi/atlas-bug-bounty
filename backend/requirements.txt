@@ -1,7 +1,8 @@
-fastapi
-uvicorn[standard]
-httpx
-python-dotenv
-clerk-backend-api
-PyJWT[crypto]
-stripe
+fastapi==0.136.3
+uvicorn[standard]==0.49.0
+httpx==0.28.1
+python-dotenv==1.2.2
+clerk-backend-api==6.0.1
+PyJWT[crypto]==2.13.0
+stripe==15.2.1
+python-frontmatter==1.3.0

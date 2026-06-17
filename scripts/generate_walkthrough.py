@@ -67,8 +67,12 @@ def clean_weakness(weakness):
 
 
 def call_claude(prompt, timeout=180):
+    # report_content embedded in the prompt comes from a third-party GitHub
+    # mirror, not from HackerOne directly — treat it as untrusted. --tools ""
+    # disables all tool use so a prompt injection in that content can at worst
+    # produce bad output text, never trigger a file/shell/network action.
     result = subprocess.run(
-        ["claude", "-p", "--dangerously-skip-permissions", prompt],
+        ["claude", "-p", "--tools", "", "--", prompt],
         capture_output=True,
         text=True,
         timeout=timeout,

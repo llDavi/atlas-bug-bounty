@@ -141,7 +141,6 @@ export default function WalkthroughDetailPage() {
     if (!isLoaded || !isPro || !slug) return;
     setLoadingBody(true);
     getToken().then((token) => {
-      console.log("[walkthrough] token:", token ? token.slice(0, 40) + "..." : "NULL");
       if (!token) {
         setError("Session token unavailable — try refreshing the page");
         setLoadingBody(false);

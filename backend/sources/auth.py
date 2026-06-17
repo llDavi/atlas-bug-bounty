@@ -4,6 +4,8 @@ Token verification uses Clerk's public JWKS endpoint (no secret needed).
 User metadata (is_pro) is fetched via the Clerk Backend API using the secret key.
 """
 
+import hmac
+
 import jwt
 from jwt import PyJWKClient
 from fastapi import Depends, HTTPException, status
@@ -50,25 +52,20 @@ def require_pro(credentials: HTTPAuthorizationCredentials | None = Depends(_bear
     """Dependency: raises 401 if not authenticated, 403 if not Pro."""
     token = _token_from(credentials)
     if not token:
-        print("[auth] no token in request")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     try:
         payload = _verify_jwt(token)
     except jwt.PyJWTError as exc:
-        print(f"[auth] JWT verification failed: {exc}")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
     user_id = payload.get("sub")
     if not user_id:
-        print("[auth] no sub in token payload")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
 
     try:
         user = _clerk.users.get(user_id=user_id)
         is_pro = bool((user.public_metadata or {}).get("is_pro", False))
-        print(f"[auth] user={user_id} is_pro={is_pro}")
-    except Exception as exc:
-        print(f"[auth] Clerk API error: {exc}")
+    except Exception:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not verify user")
 
     if not is_pro:
@@ -80,5 +77,5 @@ def require_pro(credentials: HTTPAuthorizationCredentials | None = Depends(_bear
 def require_admin(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> None:
     """Dependency: protects internal/admin endpoints with a static bearer token."""
     token = _token_from(credentials)
-    if not ADMIN_TOKEN or token != ADMIN_TOKEN:
+    if not ADMIN_TOKEN or not token or not hmac.compare_digest(token, ADMIN_TOKEN):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authorized")

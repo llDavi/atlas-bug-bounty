@@ -1,8 +1,10 @@
 """Lightweight SQLite persistence — no external DB service needed.
 
-Used for Get Listed submissions and the Stripe customer <-> Clerk user mapping
-(Stripe subscription webhooks only carry a Stripe customer id, so we keep a
-local lookup back to the Clerk user id created at checkout time).
+Used for Get Listed submissions. Note: on Render's free tier this disk is
+ephemeral and gets wiped on every redeploy, so submissions aren't permanent —
+acceptable for this low-stakes use case. (Stripe customer <-> Clerk user
+mapping lives in Clerk/Stripe metadata instead of here, since losing that on
+redeploy would break Pro users' billing portal access.)
 """
 
 import sqlite3
@@ -34,13 +36,6 @@ def init_db():
                 program_url TEXT NOT NULL,
                 contact_email TEXT NOT NULL,
                 notes TEXT,
-                created_at TEXT NOT NULL DEFAULT (datetime('now'))
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS stripe_customers (
-                stripe_customer_id TEXT PRIMARY KEY,
-                clerk_user_id TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now'))
             )
         """)

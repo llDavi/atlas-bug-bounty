@@ -1,14 +1,18 @@
+import re
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 import stripe
 
 from sources.aggregator import get_programs as fetch_programs
 from sources.walkthroughs import get_list as fetch_walkthroughs, get_detail as fetch_walkthrough
 from sources.auth import require_pro, require_auth, require_admin
 from sources.db import init_db
-from sources import submissions, billing
+from sources import submissions, billing, ratelimit
 from sources.config import ALLOWED_ORIGINS
+
+_EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 app = FastAPI(title="Bounty Radar API")
 init_db()
@@ -49,14 +53,21 @@ def get_walkthrough(slug: str, _user=Depends(require_pro)):
 
 
 class GetListedRequest(BaseModel):
-    program_name: str
-    platform: str
-    program_url: str
-    contact_email: str
-    notes: str = ""
+    program_name: str = Field(max_length=200)
+    platform: str = Field(max_length=50)
+    program_url: str = Field(max_length=500)
+    contact_email: str = Field(max_length=320)
+    notes: str = Field("", max_length=2000)
+
+    @field_validator("contact_email")
+    @classmethod
+    def _valid_email(cls, v):
+        if not _EMAIL_RE.match(v.strip()):
+            raise ValueError("Invalid email format")
+        return v
 
 
-@app.post("/api/get-listed")
+@app.post("/api/get-listed", dependencies=[Depends(ratelimit.by_ip(5, 3600))])
 def post_get_listed(body: GetListedRequest):
     if not body.program_name.strip() or not body.program_url.strip() or not body.contact_email.strip():
         raise HTTPException(status_code=400, detail="Missing required fields")
@@ -82,6 +93,7 @@ class CheckoutRequest(BaseModel):
 @app.post("/api/billing/checkout")
 def post_billing_checkout(body: CheckoutRequest, user=Depends(require_auth)):
     clerk_user_id = user["sub"]
+    ratelimit.check(f"checkout:{clerk_user_id}", max_requests=10, window_seconds=3600)
     email = billing.get_user_email(clerk_user_id)
     try:
         url = billing.create_checkout_session(clerk_user_id, email, body.plan)
