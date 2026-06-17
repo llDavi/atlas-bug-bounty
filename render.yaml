@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: atlas-backend
+    runtime: python
+    rootDir: backend
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: HACKERONE_USERNAME
+        sync: false
+      - key: HACKERONE_API_TOKEN
+        sync: false
+      - key: INTIGRITI_API_TOKEN
+        sync: false
+      - key: CLERK_SECRET_KEY
+        sync: false
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_ID_MONTHLY
+        sync: false
+      - key: STRIPE_PRICE_ID_YEARLY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: EXTRA_CORS_ORIGINS
+        sync: false

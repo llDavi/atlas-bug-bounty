@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+httpx
+python-dotenv
+clerk-backend-api
+PyJWT[crypto]
+stripe

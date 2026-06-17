@@ -1,0 +1,182 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-evergreen-50: #eff6f1;
+  --color-evergreen-100: #deede3;
+  --color-evergreen-200: #bedac7;
+  --color-evergreen-300: #9dc8ab;
+  --color-evergreen-400: #7cb68f;
+  --color-evergreen-500: #5ca374;
+  --color-evergreen-600: #49835c;
+  --color-evergreen-700: #376245;
+  --color-evergreen-800: #25412e;
+  --color-evergreen-900: #122117;
+  --color-evergreen-950: #0d1710;
+
+  --color-dark-slate-grey-50: #f0f5f5;
+  --color-dark-slate-grey-100: #e0ebea;
+  --color-dark-slate-grey-200: #c1d7d6;
+  --color-dark-slate-grey-300: #a2c3c1;
+  --color-dark-slate-grey-400: #84aead;
+  --color-dark-slate-grey-500: #659a98;
+  --color-dark-slate-grey-600: #517b7a;
+  --color-dark-slate-grey-700: #3c5d5b;
+  --color-dark-slate-grey-800: #283e3d;
+  --color-dark-slate-grey-900: #141f1e;
+  --color-dark-slate-grey-950: #0e1615;
+
+  --color-blue-slate-50: #f0f2f5;
+  --color-blue-slate-100: #e1e4ea;
+  --color-blue-slate-200: #c2c9d6;
+  --color-blue-slate-300: #a4afc1;
+  --color-blue-slate-400: #8694ac;
+  --color-blue-slate-500: #677998;
+  --color-blue-slate-600: #536179;
+  --color-blue-slate-700: #3e495b;
+  --color-blue-slate-800: #29303d;
+  --color-blue-slate-900: #15181e;
+  --color-blue-slate-950: #0e1115;
+
+  --color-dusty-grape-50: #f1eff6;
+  --color-dusty-grape-100: #e2dfec;
+  --color-dusty-grape-200: #c5bfd9;
+  --color-dusty-grape-300: #a99fc6;
+  --color-dusty-grape-400: #8c7eb4;
+  --color-dusty-grape-500: #6f5ea1;
+  --color-dusty-grape-600: #594b81;
+  --color-dusty-grape-700: #433960;
+  --color-dusty-grape-800: #2c2640;
+  --color-dusty-grape-900: #161320;
+  --color-dusty-grape-950: #100d16;
+
+  --color-amethyst-smoke-50: #f4eff6;
+  --color-amethyst-smoke-100: #e8deed;
+  --color-amethyst-smoke-200: #d2bddb;
+  --color-amethyst-smoke-300: #bb9cc9;
+  --color-amethyst-smoke-400: #a57bb7;
+  --color-amethyst-smoke-500: #8e5ba4;
+  --color-amethyst-smoke-600: #724884;
+  --color-amethyst-smoke-700: #553663;
+  --color-amethyst-smoke-800: #392442;
+  --color-amethyst-smoke-900: #1c1221;
+  --color-amethyst-smoke-950: #140d17;
+}
+
+:root {
+  font: 14px/145% system-ui, "Segoe UI", Roboto, sans-serif;
+  letter-spacing: 0.18px;
+  color-scheme: light dark;
+
+  --signal-green: #18794e;
+  --signal-purple: #7c3aed;
+}
+
+.dark {
+  --signal-green: #3fb950;
+  --signal-purple: #a371f7;
+}
+
+body {
+  margin: 0;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes radar-sweep {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes blink-cursor {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  50% {
+    transform: translateY(-18px) translateX(12px);
+  }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+.radar-sweep {
+  animation: radar-sweep 4s linear infinite;
+}
+
+.cursor-blink {
+  animation: blink-cursor 1s step-end infinite;
+}
+
+.animate-float {
+  animation: float 10s ease-in-out infinite;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+.reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.glow-evergreen {
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.glow-evergreen:hover {
+  box-shadow: 0 0 0 1px rgba(63, 185, 80, 0.35), 0 8px 24px -8px rgba(63, 185, 80, 0.45);
+  transform: translateY(-2px);
+}
+
+.glow-purple {
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.2s ease-out;
+}
+
+.glow-purple:hover {
+  box-shadow: 0 0 0 1px rgba(163, 113, 247, 0.35), 0 8px 24px -8px rgba(163, 113, 247, 0.45);
+  transform: translateY(-2px);
+}
+
+.scrollbar-hide {
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
