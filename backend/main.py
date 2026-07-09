@@ -26,6 +26,11 @@ app.add_middleware(
 )
 
 
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
 @app.get("/api/programs")
 def get_programs():
     return fetch_programs()
