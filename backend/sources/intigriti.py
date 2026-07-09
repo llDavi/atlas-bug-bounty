@@ -48,6 +48,10 @@ async def _gather_extras(ids):
         content = detail["domains"].get("content") or []
         asset_types = {classify_asset_type(c["type"]["value"]) for c in content}
         has_wildcard = any(c["type"]["value"] == "Wildcard" for c in content)
+        targets = [
+            {"identifier": c["endpoint"], "type": classify_asset_type(c["type"]["value"])}
+            for c in content
+        ]
 
         for c in content:
             if c["type"]["value"] in ("Wildcard", "Url"):
@@ -59,6 +63,7 @@ async def _gather_extras(ids):
             "asset_types": asset_types,
             "has_wildcard": has_wildcard,
             "scope_clear": len(content) > 0,
+            "targets": targets,
             # bounty table here only exposes qualitative tiers (Tier 1-3 / No
             # Bounty), not per-severity amounts, so we can't confirm a
             # defined $ bounty table from this endpoint.
@@ -120,6 +125,14 @@ def fetch():
                 payout_max=p["payout_max"],
                 currency=p["currency"],
                 rubric_score=rubric_score,
+                targets=metrics.get("targets", []),
+                stats={
+                    "participants": metrics.get("participants"),
+                    "resolved_reports": metrics.get("resolved_reports"),
+                    "response_hours": metrics.get("response_hours"),
+                    "bounty_table_defined": metrics.get("bounty_table_defined"),
+                    "waf": metrics.get("waf"),
+                },
             )
         )
 

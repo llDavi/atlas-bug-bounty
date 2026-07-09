@@ -8,6 +8,7 @@ FETCHERS = [yeswehack, immunefi, sherlock, bugcrowd, hackerone, intigriti]
 CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 
 _cache = {"programs": [], "fetched_at": 0}
+_fetch_lock = threading.Lock()
 
 
 def _fetch_all():
@@ -33,10 +34,18 @@ def _fetch_all():
 def get_programs():
     now = time.time()
     if not _cache["programs"] or now - _cache["fetched_at"] > CACHE_TTL_SECONDS:
-        programs = _fetch_all()
-        if programs:
-            _cache["programs"] = programs
-            _cache["fetched_at"] = now
+        # Without this lock, a request arriving while the boot-time warm-up
+        # (or another request) is already fetching would kick off its own
+        # redundant _fetch_all(), doubling load on an already slow path.
+        # Waiting on the lock means it just gets the result the other
+        # caller is about to produce instead.
+        with _fetch_lock:
+            now = time.time()
+            if not _cache["programs"] or now - _cache["fetched_at"] > CACHE_TTL_SECONDS:
+                programs = _fetch_all()
+                if programs:
+                    _cache["programs"] = programs
+                    _cache["fetched_at"] = time.time()
 
     return _cache["programs"]
 
@@ -45,10 +54,11 @@ def _warm_cache():
     """Populate the cache as soon as the process boots, so the first real
     request doesn't have to block on a synchronous multi-platform fetch."""
     try:
-        programs = _fetch_all()
-        if programs:
-            _cache["programs"] = programs
-            _cache["fetched_at"] = time.time()
+        with _fetch_lock:
+            programs = _fetch_all()
+            if programs:
+                _cache["programs"] = programs
+                _cache["fetched_at"] = time.time()
     except Exception as exc:
         print(f"[aggregator] initial warm-up failed: {exc}")
 
@@ -61,10 +71,11 @@ def _background_refresh_loop():
         age = now - _cache["fetched_at"]
         if _cache["programs"] and age > CACHE_TTL_SECONDS - 120:
             try:
-                programs = _fetch_all()
-                if programs:
-                    _cache["programs"] = programs
-                    _cache["fetched_at"] = time.time()
+                with _fetch_lock:
+                    programs = _fetch_all()
+                    if programs:
+                        _cache["programs"] = programs
+                        _cache["fetched_at"] = time.time()
             except Exception as exc:
                 print(f"[aggregator] background refresh failed: {exc}")
 

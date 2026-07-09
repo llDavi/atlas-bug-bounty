@@ -99,14 +99,17 @@ async def _gather_extras(handles):
         asset_types = set()
         has_wildcard = False
         domain = None
+        targets = []
         for asset in in_scope:
             attrs = asset["attributes"]
             asset_type = attrs.get("asset_type", "")
+            identifier = attrs.get("asset_identifier", "")
             asset_types.add(classify_asset_type(asset_type))
-            if asset_type == "WILDCARD" or "*" in attrs.get("asset_identifier", ""):
+            targets.append({"identifier": identifier, "type": classify_asset_type(asset_type)})
+            if asset_type == "WILDCARD" or "*" in identifier:
                 has_wildcard = True
             if domain is None and asset_type in ("URL", "WILDCARD"):
-                domain = attrs.get("asset_identifier")
+                domain = identifier
 
         if domain:
             waf_targets[handle] = domain
@@ -116,6 +119,7 @@ async def _gather_extras(handles):
             "asset_types": asset_types,
             "has_wildcard": has_wildcard,
             "scope_clear": len(in_scope) > 0 if scopes is not None else None,
+            "targets": targets,
             "bounty_table_defined": bool(stats.get("maximum_bounty_table_value")),
             "resolved_reports": stats.get("resolved_report_count"),
             "program_age_months": _program_age_months(stats.get("started_accepting_at")),
@@ -172,6 +176,14 @@ def fetch():
                 url=PROGRAM_URL.format(handle=p["handle"]),
                 currency=p["currency"],
                 rubric_score=rubric_score,
+                targets=metrics.get("targets", []),
+                stats={
+                    "participants": metrics.get("participants"),
+                    "resolved_reports": metrics.get("resolved_reports"),
+                    "response_hours": metrics.get("response_hours"),
+                    "bounty_table_defined": metrics.get("bounty_table_defined"),
+                    "waf": metrics.get("waf"),
+                },
             )
         )
 

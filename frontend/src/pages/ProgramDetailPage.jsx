@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { useUser, SignInButton } from "@clerk/clerk-react";
 import PlatformBadge, { PLATFORM_LOGO_STYLES } from "../components/PlatformBadge";
 import ProgramLogo from "../components/ProgramLogo";
 import TypeBadge from "../components/TypeBadge";
@@ -12,11 +13,29 @@ function formatPayout(amount, currency) {
   return `${symbol}${amount.toLocaleString("en-US")}`;
 }
 
-const PLACEHOLDER_TARGETS = [
-  { domain: "app.example.com", type: "web" },
-  { domain: "api.example.com", type: "api" },
-  { domain: "*.internal.example.com", type: "mobile" },
-];
+function formatResponseHours(hours) {
+  if (hours == null) return "Unknown";
+  if (hours < 24) return "< 24h";
+  if (hours <= 72) return "1-3 days";
+  return "3+ days";
+}
+
+const WAF_LABELS = {
+  none: "None detected",
+  cloudflare: "Cloudflare",
+  akamai: "Akamai",
+  imperva: "Imperva",
+  other: "Other WAF",
+  unknown: "Unknown",
+};
+
+const STATS_PLACEHOLDER = {
+  participants: 134,
+  resolved_reports: 28,
+  response_hours: 18,
+  bounty_table_defined: true,
+  waf: "cloudflare",
+};
 
 function InfoItem({ label, children }) {
   return (
@@ -31,6 +50,8 @@ function InfoItem({ label, children }) {
 
 export default function ProgramDetailPage({ programs, loading }) {
   const { id } = useParams();
+  const { isSignedIn, user } = useUser();
+  const isPro = user?.publicMetadata?.is_pro === true;
   const program = programs.find((p) => p.id === Number(id));
 
   if (loading) {
@@ -61,6 +82,7 @@ export default function ProgramDetailPage({ programs, loading }) {
   const logoStyle =
     PLATFORM_LOGO_STYLES[program.platform] ||
     "bg-blue-slate-100 text-blue-slate-700 dark:bg-blue-slate-800 dark:text-blue-slate-300";
+  const hasStats = Object.values(program.stats).some((v) => v !== null && v !== undefined);
 
   return (
     <main className="px-4 py-4 max-w-4xl mx-auto">
@@ -149,63 +171,137 @@ export default function ProgramDetailPage({ programs, loading }) {
         className="mt-4 rounded-lg border border-blue-slate-200 dark:border-blue-slate-600 dark:bg-blue-slate-800/70 p-4"
         style={{ borderWidth: "0.5px" }}
       >
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <h2 className="text-sm font-semibold text-blue-slate-900 dark:text-blue-slate-100">
-            Program Targets
-          </h2>
-          <span
-            className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-evergreen-200 bg-evergreen-50 text-evergreen-700 dark:border-evergreen-800 dark:bg-evergreen-950 dark:text-evergreen-300"
-            style={{ borderWidth: "0.5px" }}
-          >
-            Pro
-          </span>
-        </div>
+        <h2 className="text-sm font-semibold text-blue-slate-900 dark:text-blue-slate-100 mb-3">
+          Targets
+        </h2>
 
-        <div
-          className="rounded-lg border border-blue-slate-200 dark:border-blue-slate-600 bg-blue-slate-50/50 dark:bg-blue-slate-900/40 p-4"
-          style={{ borderWidth: "0.5px" }}
-        >
-          <div className="flex items-center gap-2 mb-1 text-blue-slate-700 dark:text-blue-slate-300">
-            <LockIcon className="w-4 h-4" />
-            <span className="text-sm font-medium">Pro required</span>
-          </div>
-          <p className="text-xs text-blue-slate-500 dark:text-blue-slate-400 mb-3">
-            Unlock the full list of targets, scope notes and other details with Atlas Pro.
-          </p>
-
-          <div className="flex flex-col gap-2 opacity-50 pointer-events-none mb-3">
-            {PLACEHOLDER_TARGETS.map((target) => (
+        {program.targets.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {program.targets.map((target) => (
               <div
-                key={target.domain}
+                key={target.identifier}
                 className="flex items-center justify-between gap-2 px-3 py-2 rounded border border-blue-slate-200 dark:border-blue-slate-700 bg-white dark:bg-blue-slate-950"
                 style={{ borderWidth: "0.5px" }}
               >
                 <span className="text-sm text-blue-slate-700 dark:text-blue-slate-300 font-mono truncate">
-                  {target.domain}
+                  {target.identifier}
                 </span>
                 <TypeBadge type={target.type} />
               </div>
             ))}
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="px-3 py-1.5 rounded text-sm font-medium border border-evergreen-200 bg-evergreen-50 text-evergreen-700 dark:border-evergreen-800 dark:bg-evergreen-950 dark:text-evergreen-300 hover:border-evergreen-400 dark:hover:border-evergreen-500"
-              style={{ borderWidth: "0.5px" }}
-            >
-              Upgrade to Pro
-            </button>
-            <button
-              type="button"
-              className="px-3 py-1.5 rounded text-sm border border-blue-slate-200 dark:border-blue-slate-700 text-blue-slate-700 dark:text-blue-slate-300 hover:border-evergreen-400 dark:hover:border-evergreen-500"
-              style={{ borderWidth: "0.5px" }}
-            >
-              Sign in
-            </button>
-          </div>
-        </div>
+        ) : (
+          <p className="text-xs text-blue-slate-500 dark:text-blue-slate-400">
+            Scope isn't publicly available for this platform.
+          </p>
+        )}
       </div>
+
+      {hasStats && (
+        <div
+          className="mt-4 rounded-lg border border-blue-slate-200 dark:border-blue-slate-600 dark:bg-blue-slate-800/70 p-4"
+          style={{ borderWidth: "0.5px" }}
+        >
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <h2 className="text-sm font-semibold text-blue-slate-900 dark:text-blue-slate-100">
+              Program Stats
+            </h2>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-evergreen-200 bg-evergreen-50 text-evergreen-700 dark:border-evergreen-800 dark:bg-evergreen-950 dark:text-evergreen-300"
+              style={{ borderWidth: "0.5px" }}
+            >
+              Pro
+            </span>
+          </div>
+
+          {isPro ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <InfoItem label="Participants">
+                <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                  {program.stats.participants ?? "Unknown"}
+                </span>
+              </InfoItem>
+              <InfoItem label="Resolved reports">
+                <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                  {program.stats.resolved_reports ?? "Unknown"}
+                </span>
+              </InfoItem>
+              <InfoItem label="Avg. response time">
+                <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                  {formatResponseHours(program.stats.response_hours)}
+                </span>
+              </InfoItem>
+              <InfoItem label="Bounty table">
+                <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                  {program.stats.bounty_table_defined == null
+                    ? "Unknown"
+                    : program.stats.bounty_table_defined
+                    ? "Defined"
+                    : "Not defined"}
+                </span>
+              </InfoItem>
+              <InfoItem label="WAF">
+                <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                  {WAF_LABELS[program.stats.waf] || "Unknown"}
+                </span>
+              </InfoItem>
+            </div>
+          ) : (
+            <div
+              className="rounded-lg border border-blue-slate-200 dark:border-blue-slate-600 bg-blue-slate-50/50 dark:bg-blue-slate-900/40 p-4"
+              style={{ borderWidth: "0.5px" }}
+            >
+              <div className="flex items-center gap-2 mb-1 text-blue-slate-700 dark:text-blue-slate-300">
+                <LockIcon className="w-4 h-4" />
+                <span className="text-sm font-medium">Pro required</span>
+              </div>
+              <p className="text-xs text-blue-slate-500 dark:text-blue-slate-400 mb-3">
+                Unlock participants, response time, resolved reports and WAF detection with Atlas Pro.
+              </p>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 opacity-50 pointer-events-none mb-3">
+                <InfoItem label="Participants">
+                  <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                    {STATS_PLACEHOLDER.participants}
+                  </span>
+                </InfoItem>
+                <InfoItem label="Resolved reports">
+                  <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                    {STATS_PLACEHOLDER.resolved_reports}
+                  </span>
+                </InfoItem>
+                <InfoItem label="Avg. response time">
+                  <span className="text-sm font-medium text-blue-slate-900 dark:text-blue-slate-100">
+                    {formatResponseHours(STATS_PLACEHOLDER.response_hours)}
+                  </span>
+                </InfoItem>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {isSignedIn ? (
+                  <Link
+                    to="/pro"
+                    className="px-3 py-1.5 rounded text-sm font-medium border border-evergreen-200 bg-evergreen-50 text-evergreen-700 dark:border-evergreen-800 dark:bg-evergreen-950 dark:text-evergreen-300 hover:border-evergreen-400 dark:hover:border-evergreen-500"
+                    style={{ borderWidth: "0.5px" }}
+                  >
+                    Upgrade to Pro
+                  </Link>
+                ) : (
+                  <SignInButton mode="modal">
+                    <button
+                      type="button"
+                      className="px-3 py-1.5 rounded text-sm border border-blue-slate-200 dark:border-blue-slate-700 text-blue-slate-700 dark:text-blue-slate-300 hover:border-evergreen-400 dark:hover:border-evergreen-500"
+                      style={{ borderWidth: "0.5px" }}
+                    >
+                      Sign in
+                    </button>
+                  </SignInButton>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }

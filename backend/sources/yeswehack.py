@@ -46,6 +46,10 @@ async def _gather_extras(slugs):
         scopes = detail.get("scopes") or []
         asset_types = {classify_asset_type(s.get("scope_type")) for s in scopes}
         has_wildcard = any(s.get("scope", "").startswith("*.") for s in scopes)
+        targets = [
+            {"identifier": s.get("scope", ""), "type": classify_asset_type(s.get("scope_type"))}
+            for s in scopes
+        ]
 
         reward_grid = detail.get("reward_grid_default") or {}
         bounty_table_defined = any((reward_grid.get(k) or 0) > 0 for k in reward_grid)
@@ -60,6 +64,7 @@ async def _gather_extras(slugs):
             "asset_types": asset_types,
             "has_wildcard": has_wildcard,
             "scope_clear": len(scopes) > 0,
+            "targets": targets,
             "bounty_table_defined": bounty_table_defined,
             "resolved_reports": stats.get("total_reports"),
             "program_age_months": None,
@@ -126,6 +131,14 @@ def fetch():
                 updated_at=p["updated_at"],
                 logo=p["logo"],
                 rubric_score=rubric_score,
+                targets=metrics.get("targets", []),
+                stats={
+                    "participants": metrics.get("participants"),
+                    "resolved_reports": metrics.get("resolved_reports"),
+                    "response_hours": metrics.get("response_hours"),
+                    "bounty_table_defined": metrics.get("bounty_table_defined"),
+                    "waf": metrics.get("waf"),
+                },
             )
         )
 

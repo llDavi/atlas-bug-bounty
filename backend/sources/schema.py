@@ -25,6 +25,13 @@ Fields:
   stack_tags    list[str], technologies / ecosystems involved
   updated_at    str, ISO date (YYYY-MM-DD)
   logo          str, URL to the program/project logo ("" if unknown)
+  targets       list[dict], in-scope assets as {"identifier": str, "type": str}.
+                Free to view. Empty when the source doesn't expose scope
+                publicly (e.g. Bugcrowd, which gates it behind a researcher
+                login).
+  stats         dict, Pro-only program intel: participants, resolved_reports,
+                response_hours, bounty_table_defined, waf. Any key may be
+                None when the source doesn't provide it.
 """
 
 from .rubric import band_from_rubric_score, difficulty_from_rubric_score
@@ -70,6 +77,8 @@ def build_program(
     difficulty=None,
     logo="",
     rubric_score=None,
+    targets=None,
+    stats=None,
 ):
     payout_min = payout_min or 0
     payout_max = payout_max or 0
@@ -97,4 +106,6 @@ def build_program(
         "stack_tags": stack_tags or [],
         "updated_at": updated_at,
         "logo": logo or "",
+        "targets": targets or [],
+        "stats": stats or {},
     }

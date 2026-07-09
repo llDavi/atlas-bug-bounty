@@ -3,6 +3,7 @@ const TYPE_LABELS = {
   api: "API",
   mobile: "Mobile",
   smart_contract: "Smart Contract",
+  other: "Other",
 };
 
 export default function TypeBadge({ type }) {
