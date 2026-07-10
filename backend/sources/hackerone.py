@@ -12,7 +12,7 @@ API_URL = "https://api.hackerone.com/v1/hackers/programs"
 PROGRAM_URL = "https://hackerone.com/{handle}"
 GRAPHQL_URL = "https://hackerone.com/graphql"
 
-CONCURRENCY = 10
+CONCURRENCY = 5
 
 TEAM_QUERY = """
 query($handle: String!) {
@@ -52,29 +52,54 @@ def _response_hours_from_efficiency(pct):
     return 96.0
 
 
+RETRY_ATTEMPTS = 5
+MAX_RETRY_AFTER = 60.0
+
+
+async def _with_retries(request_fn):
+    """HackerOne rate-limits ~600 concurrent per-program requests hard (most
+    come back 429), and tells us exactly how long to wait via Retry-After.
+    A single failed attempt used to silently produce empty scope data for
+    most programs, so honor Retry-After when present and fall back to a
+    short backoff for other transient errors."""
+    for attempt in range(RETRY_ATTEMPTS):
+        try:
+            resp = await request_fn()
+            resp.raise_for_status()
+            return resp
+        except httpx.HTTPStatusError as exc:
+            if attempt == RETRY_ATTEMPTS - 1:
+                return None
+            retry_after = exc.response.headers.get("retry-after")
+            wait = min(float(retry_after), MAX_RETRY_AFTER) if retry_after else 0.5 * (attempt + 1)
+            await asyncio.sleep(wait)
+        except httpx.HTTPError:
+            if attempt == RETRY_ATTEMPTS - 1:
+                return None
+            await asyncio.sleep(0.5 * (attempt + 1))
+
+
 async def _fetch_scopes(client, sem, handle):
     async with sem:
-        try:
-            resp = await client.get(
+        resp = await _with_retries(
+            lambda: client.get(
                 f"{API_URL}/{handle}/structured_scopes",
                 params={"page[size]": 100},
             )
-            resp.raise_for_status()
-            return resp.json().get("data", [])
-        except httpx.HTTPError:
-            return None
+        )
+        return resp.json().get("data", []) if resp is not None else None
 
 
 async def _fetch_team_stats(client, sem, handle):
     async with sem:
-        try:
-            resp = await client.post(
+        resp = await _with_retries(
+            lambda: client.post(
                 GRAPHQL_URL, json={"query": TEAM_QUERY, "variables": {"handle": handle}}
             )
-            resp.raise_for_status()
-            return (resp.json().get("data") or {}).get("team") or {}
-        except httpx.HTTPError:
+        )
+        if resp is None:
             return {}
+        return (resp.json().get("data") or {}).get("team") or {}
 
 
 async def _gather_extras(handles):
@@ -85,7 +110,7 @@ async def _gather_extras(handles):
     # structured_scopes requires the authenticated REST API; the GraphQL
     # endpoint is public and rejects requests that carry the REST Basic Auth
     # header, so it needs its own unauthenticated client.
-    async with httpx.AsyncClient(auth=auth, timeout=10) as rest_client, httpx.AsyncClient(timeout=10) as graphql_client:
+    async with httpx.AsyncClient(auth=auth, timeout=20) as rest_client, httpx.AsyncClient(timeout=20) as graphql_client:
         scope_tasks = [_fetch_scopes(rest_client, sem, h) for h in handles]
         stats_tasks = [_fetch_team_stats(graphql_client, graphql_sem, h) for h in handles]
         scopes_results, stats_results = await asyncio.gather(

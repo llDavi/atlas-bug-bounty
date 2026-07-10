@@ -6,7 +6,6 @@ import httpx
 from .schema import build_program
 
 API_URL = "https://bugcrowd.com/engagements.json"
-PROGRAM_URL = "https://bugcrowd.com{brief_url}"
 HEADERS = {"User-Agent": "Mozilla/5.0"}
 
 
@@ -40,7 +39,7 @@ def fetch():
                     build_program(
                         name=item["name"],
                         platform="bugcrowd",
-                        url=PROGRAM_URL.format(brief_url=item["briefUrl"]),
+                        url=item["briefUrl"],
                         payout_min=_parse_amount(reward.get("minReward")),
                         payout_max=_parse_amount(reward.get("maxReward")),
                         currency=currency,

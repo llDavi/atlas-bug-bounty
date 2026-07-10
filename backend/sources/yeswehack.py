@@ -20,14 +20,20 @@ def _scope_domain(scope):
     return domain
 
 
+RETRY_ATTEMPTS = 3
+
+
 async def _fetch_detail(client, sem, slug):
     async with sem:
-        try:
-            resp = await client.get(f"{API_URL}/{slug}")
-            resp.raise_for_status()
-            return resp.json()
-        except httpx.HTTPError:
-            return None
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                resp = await client.get(f"{API_URL}/{slug}")
+                resp.raise_for_status()
+                return resp.json()
+            except httpx.HTTPError:
+                if attempt == RETRY_ATTEMPTS - 1:
+                    return None
+                await asyncio.sleep(0.5 * (attempt + 1))
 
 
 async def _gather_extras(slugs):

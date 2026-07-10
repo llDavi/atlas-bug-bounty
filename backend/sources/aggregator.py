@@ -32,21 +32,11 @@ def _fetch_all():
 
 
 def get_programs():
-    now = time.time()
-    if not _cache["programs"] or now - _cache["fetched_at"] > CACHE_TTL_SECONDS:
-        # Without this lock, a request arriving while the boot-time warm-up
-        # (or another request) is already fetching would kick off its own
-        # redundant _fetch_all(), doubling load on an already slow path.
-        # Waiting on the lock means it just gets the result the other
-        # caller is about to produce instead.
-        with _fetch_lock:
-            now = time.time()
-            if not _cache["programs"] or now - _cache["fetched_at"] > CACHE_TTL_SECONDS:
-                programs = _fetch_all()
-                if programs:
-                    _cache["programs"] = programs
-                    _cache["fetched_at"] = time.time()
-
+    # Always serve whatever is cached, even if stale, instead of blocking on
+    # a fresh fetch: HackerOne alone can take several minutes once it's
+    # respecting rate limits properly, and no request should hang that long.
+    # Freshness is entirely the job of _warm_cache (boot) and
+    # _background_refresh_loop (periodic), which run off the request path.
     return _cache["programs"]
 
 
@@ -64,12 +54,14 @@ def _warm_cache():
 
 
 def _background_refresh_loop():
-    """Pre-warm the cache 2 minutes before expiry so no request ever blocks on a cold fetch."""
+    """Refresh well ahead of expiry: a full fetch can take 10+ minutes now that
+    HackerOne properly backs off on rate limits, so the lead time needs to
+    comfortably exceed that instead of the old 2-minute buffer."""
     while True:
         time.sleep(60)
         now = time.time()
         age = now - _cache["fetched_at"]
-        if _cache["programs"] and age > CACHE_TTL_SECONDS - 120:
+        if _cache["programs"] and age > CACHE_TTL_SECONDS - 900:
             try:
                 with _fetch_lock:
                     programs = _fetch_all()

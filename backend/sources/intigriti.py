@@ -20,15 +20,21 @@ def _domain_for_waf(endpoint):
     return domain
 
 
+RETRY_ATTEMPTS = 3
+
+
 async def _fetch_detail(client, sem, program_id):
     async with sem:
-        try:
-            resp = await client.get(f"{API_URL}/{program_id}")
-            if resp.status_code != 200:
-                return None
-            return resp.json()
-        except httpx.HTTPError:
-            return None
+        for attempt in range(RETRY_ATTEMPTS):
+            try:
+                resp = await client.get(f"{API_URL}/{program_id}")
+                if resp.status_code != 200:
+                    raise httpx.HTTPStatusError("non-200", request=resp.request, response=resp)
+                return resp.json()
+            except httpx.HTTPError:
+                if attempt == RETRY_ATTEMPTS - 1:
+                    return None
+                await asyncio.sleep(0.5 * (attempt + 1))
 
 
 async def _gather_extras(ids):
