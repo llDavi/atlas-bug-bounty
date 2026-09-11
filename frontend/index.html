@@ -4,28 +4,53 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Atlas — Your first bug bounty, made simple</title>
+    <meta name="theme-color" content="#5f5039" />
+    <title>Atlas — The Hunter's Codex</title>
     <meta
       name="description"
-      content="Atlas scores every public bug bounty program by how beginner-friendly it actually is — combining scope size, competition level, tech barriers and program quality into one clear ranking."
+      content="An adventurer's codex for bug bounty hunting: a hand-drawn survey of the Web Realm, a quest journal, dungeons to descend, a bestiary of flaws, and a register of every open bounty contract graded by how approachable it actually is."
     />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Atlas — Your first bug bounty, made simple" />
+    <meta property="og:type" content="book" />
+    <meta property="og:title" content="Atlas — The Hunter's Codex" />
     <meta
       property="og:description"
-      content="Atlas scores every public bug bounty program by how beginner-friendly it actually is — combining scope size, competition level, tech barriers and program quality into one clear ranking."
+      content="A survey of the Web Realm, drawn by hand: quests, dungeons, a bestiary of flaws, and every open bounty contract graded by how approachable it actually is."
     />
     <meta property="og:url" content="https://atlasbugbounty.com" />
     <meta property="og:image" content="https://atlasbugbounty.com/favicon.svg" />
     <meta name="twitter:card" content="summary" />
-    <meta name="twitter:title" content="Atlas — Your first bug bounty, made simple" />
+    <meta name="twitter:title" content="Atlas — The Hunter's Codex" />
     <meta
       name="twitter:description"
-      content="Atlas scores every public bug bounty program by how beginner-friendly it actually is."
+      content="Learn bug bounty hunting from an ancient adventurer's journal: quests, dungeons, a bestiary of flaws, and a register of live contracts."
     />
     <meta name="twitter:image" content="https://atlasbugbounty.com/favicon.svg" />
+
+    <!-- The hand of the book: 17th-century printing (IM Fell), a scholarly
+         body serif (EB Garamond), inscriptional caps (Cinzel), a marginal
+         hand (Caveat) and a typewriter for pasted-in transcripts. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=IM+Fell+English+SC&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Cinzel:wght@400;500;600&family=Caveat:wght@400;500&family=Courier+Prime:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
+    <script>
+      /* Stamp the light before first paint, so the page never flashes the
+         wrong one. React's LampProvider takes over from here. */
+      (function () {
+        try {
+          var kept = localStorage.getItem("codex-lamp");
+          var night = kept === "night" ||
+            (kept !== "day" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.dataset.theme = night ? "night" : "day";
+        } catch (e) {
+          document.documentElement.dataset.theme = "day";
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

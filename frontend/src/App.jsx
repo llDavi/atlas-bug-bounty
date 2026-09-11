@@ -1,22 +1,58 @@
 import { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
-import Navbar from "./components/Navbar";
-import HomePage from "./pages/HomePage";
-import ProgramsPage from "./pages/ProgramsPage";
-import ProgramDetailPage from "./pages/ProgramDetailPage";
-import LatestTargetsPage from "./pages/LatestTargetsPage";
-import PlatformsPage from "./pages/PlatformsPage";
-import GetListedPage from "./pages/GetListedPage";
-import AboutPage from "./pages/AboutPage";
-import FAQPage from "./pages/FAQPage";
-import ProPage from "./pages/ProPage";
-import ProSuccessPage from "./pages/ProSuccessPage";
-import WalkthroughsPage from "./pages/WalkthroughsPage";
-import WalkthroughDetailPage from "./pages/WalkthroughDetailPage";
+import { Routes, Route, Navigate, useParams, useLocation, Link } from "react-router-dom";
+import { CodexHeader, Colophon, Fleuron } from "./components/ms/Codex";
+import MapPage from "./pages/MapPage";
+import QuestsPage from "./pages/QuestsPage";
+import DungeonsPage from "./pages/DungeonsPage";
+import DungeonPage from "./pages/DungeonPage";
+import BestiaryPage from "./pages/BestiaryPage";
+import JournalsPage from "./pages/JournalsPage";
+import JournalPage from "./pages/JournalPage";
+import RegistryPage from "./pages/RegistryPage";
+import RegistryEntryPage from "./pages/RegistryEntryPage";
+import CharacterPage from "./pages/CharacterPage";
+import RollPage from "./pages/RollPage";
+import OathPage from "./pages/OathPage";
+import OathSwornPage from "./pages/OathSwornPage";
+import CharterPage from "./pages/CharterPage";
+import QuestionsPage from "./pages/QuestionsPage";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-export default function App({ dark, onToggleTheme }) {
+/* Old links, kept honest: the paths this book used to be bound under. */
+function MovedTo({ to, param }) {
+  const params = useParams();
+  return <Navigate to={param ? `${to}/${params[param]}` : to} replace />;
+}
+
+function TurnToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
+function NotFound() {
+  return (
+    <div className="leaf leaf--ruled quire mx-auto" style={{ maxWidth: "34rem" }}>
+      <div className="leaf-field text-center">
+        <p className="t-caps">The keeper turns the whole book over</p>
+        <h1 className="t-title text-4xl mt-2 mb-2">This folio was never bound.</h1>
+        <Fleuron width={150} className="ornament--center" />
+        <p className="column mx-auto">
+          Either the page was cut out, or the road you followed here was drawn wrong. The survey
+          is still where it was.
+        </p>
+        <Link to="/" className="ink-btn ink-btn--filled mt-6">Back to the survey</Link>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  /* The registry is copied from the aggregator; everything else in the book
+     is local until the backend catches up. */
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,50 +61,76 @@ export default function App({ dark, onToggleTheme }) {
   useEffect(() => {
     fetch(`${API_URL}/api/programs`)
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to load programs");
+        if (!res.ok) throw new Error("The register could not be read.");
         return res.json();
       })
-      .then((data) => setPrograms(data))
+      .then((data) => setPrograms(Array.isArray(data) ? data : []))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="min-h-screen bg-blue-slate-50 dark:bg-blue-slate-950 text-blue-slate-900 dark:text-blue-slate-100">
-      <Navbar
-        search={search}
-        onSearchChange={setSearch}
-        dark={dark}
-        onToggleTheme={onToggleTheme}
-      />
+    <div className="codex">
+      <TurnToTop />
+      <CodexHeader />
 
-      <Routes>
-        <Route path="/" element={<HomePage programs={programs} />} />
-        <Route
-          path="/programs"
-          element={
-            <ProgramsPage
-              programs={programs}
-              loading={loading}
-              error={error}
-              search={search}
-            />
-          }
-        />
-        <Route
-          path="/programs/:id"
-          element={<ProgramDetailPage programs={programs} loading={loading} />}
-        />
-        <Route path="/latest-targets" element={<LatestTargetsPage />} />
-        <Route path="/platforms" element={<PlatformsPage />} />
-        <Route path="/get-listed" element={<GetListedPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/pro" element={<ProPage />} />
-        <Route path="/pro/success" element={<ProSuccessPage />} />
-        <Route path="/walkthroughs" element={<WalkthroughsPage />} />
-        <Route path="/walkthroughs/:slug" element={<WalkthroughDetailPage />} />
-      </Routes>
+      <main className="max-w-6xl mx-auto px-4 sm:px-8" style={{ paddingBlock: "2.5rem" }}>
+        <Routes>
+          <Route path="/" element={<MapPage />} />
+
+          <Route path="/quests" element={<QuestsPage />} />
+          <Route path="/dungeons" element={<DungeonsPage />} />
+          <Route path="/dungeons/:slug" element={<DungeonPage />} />
+          <Route path="/bestiary" element={<BestiaryPage />} />
+
+          <Route path="/journals" element={<JournalsPage />} />
+          <Route path="/journals/:slug" element={<JournalPage />} />
+
+          <Route
+            path="/registry"
+            element={
+              <RegistryPage
+                programs={programs}
+                loading={loading}
+                error={error}
+                search={search}
+                onSearchChange={setSearch}
+              />
+            }
+          />
+          <Route
+            path="/registry/:id"
+            element={<RegistryEntryPage programs={programs} loading={loading} />}
+          />
+
+          <Route path="/character" element={<CharacterPage />} />
+          <Route path="/roll" element={<RollPage />} />
+
+          <Route path="/oath" element={<OathPage />} />
+          <Route path="/oath/sworn" element={<OathSwornPage />} />
+
+          <Route path="/charter" element={<CharterPage />} />
+          <Route path="/questions" element={<QuestionsPage />} />
+
+          {/* --- where the book was bound before --- */}
+          <Route path="/pro" element={<OathPage />} />
+          <Route path="/pro/success" element={<OathSwornPage />} />
+          <Route path="/programs" element={<MovedTo to="/registry" />} />
+          <Route path="/programs/:id" element={<MovedTo to="/registry" param="id" />} />
+          <Route path="/walkthroughs" element={<MovedTo to="/journals" />} />
+          <Route path="/walkthroughs/:slug" element={<MovedTo to="/journals" param="slug" />} />
+          <Route path="/academy" element={<MovedTo to="/bestiary" />} />
+          <Route path="/missions" element={<MovedTo to="/quests" />} />
+          <Route path="/hunter" element={<MovedTo to="/character" />} />
+          <Route path="/hall" element={<MovedTo to="/roll" />} />
+          <Route path="/about" element={<MovedTo to="/charter" />} />
+          <Route path="/faq" element={<MovedTo to="/questions" />} />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+
+      <Colophon />
     </div>
   );
 }

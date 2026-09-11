@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://atlasbugbounty.com/</loc></url>
-  <url><loc>https://atlasbugbounty.com/programs</loc></url>
-  <url><loc>https://atlasbugbounty.com/latest-targets</loc></url>
-  <url><loc>https://atlasbugbounty.com/platforms</loc></url>
-  <url><loc>https://atlasbugbounty.com/walkthroughs</loc></url>
-  <url><loc>https://atlasbugbounty.com/about</loc></url>
-  <url><loc>https://atlasbugbounty.com/faq</loc></url>
-  <url><loc>https://atlasbugbounty.com/pro</loc></url>
+  <url><loc>https://atlasbugbounty.com/quests</loc></url>
+  <url><loc>https://atlasbugbounty.com/dungeons</loc></url>
+  <url><loc>https://atlasbugbounty.com/bestiary</loc></url>
+  <url><loc>https://atlasbugbounty.com/journals</loc></url>
+  <url><loc>https://atlasbugbounty.com/registry</loc></url>
+  <url><loc>https://atlasbugbounty.com/character</loc></url>
+  <url><loc>https://atlasbugbounty.com/roll</loc></url>
+  <url><loc>https://atlasbugbounty.com/oath</loc></url>
+  <url><loc>https://atlasbugbounty.com/charter</loc></url>
+  <url><loc>https://atlasbugbounty.com/questions</loc></url>
 </urlset>

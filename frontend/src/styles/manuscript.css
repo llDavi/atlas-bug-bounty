@@ -1,0 +1,789 @@
+/* ==========================================================================
+   THE HUNTER'S CODEX — manuscript design system
+   ==========================================================================
+   Rules, not suggestions:
+     · No gradients. No glows. No glassmorphism. No glossy cards.
+     · Depth comes from paper tone, ink weight and ruling — never shadow.
+     · Corners are square (paper is cut, not rounded).
+     · Structure comes from ink rules and ornaments, never from card grids.
+     · Colour carries meaning: rubric = the one live thing, gold = reward,
+       verdigris = done, indigo = a later hand. Never decoration.
+
+   Two lights: DAY (parchment by a window) and NIGHT (the same book read by
+   candle). The palette below is the only thing that changes between them —
+   every rule after the palette is written in tokens, so both lights are one
+   design rather than two skins.
+   ========================================================================== */
+
+/* ------------------------------------------------------- DAY (default) */
+
+:root {
+  color-scheme: light;
+
+  /* Parchment — the ground everything sits on, lightest to darkest */
+  --paper-lit:    #f2ead6;  /* a fresh leaf: the page that matters most */
+  --paper:        #e6dcc0;  /* the book's own page */
+  --paper-aged:   #dacca8;  /* an older leaf, quiet panels, slips */
+  --paper-shade:  #c6b58c;  /* the edge of the sheets underneath */
+  --desk:         #7d6a4d;
+  --desk-dark:    #574a35;
+
+  /* Ink */
+  --ink-strong:   #14100c;  /* titles, figures, engraved lines */
+  --ink:          #2b241c;  /* body */
+  --ink-soft:     #5b5140;  /* secondary, captions */
+  --ink-faint:    #8c7f66;  /* tertiary, ruling, obscured entries */
+
+  /* Rules */
+  --rule:         rgba(43, 36, 28, 0.42);
+  --rule-soft:    rgba(43, 36, 28, 0.18);
+  --rule-strong:  rgba(20, 16, 12, 0.78);
+
+  /* The four meanings */
+  --rubric:       #8a2f23;  /* live, current, urgent, sealed-shut */
+  --rubric-deep:  #6d251c;
+  --verdigris:    #4a5c37;  /* done, walked, safe */
+  --gold-leaf:    #866a24;  /* reward, mastery */
+  --indigo:       #3c5670;  /* the later hand: annotations */
+
+  /* Washes — flat tints, never gradients */
+  --wash-rubric:  rgba(138, 47, 35, 0.09);
+  --wash-band:    rgba(43, 36, 28, 0.06);
+  --wash-gold:    rgba(134, 106, 36, 0.10);
+
+  /* Objects */
+  --survey-bg:    #dacca8;
+  --plate-bg:     #574a35;
+  --plate-ink:    #e6dcc0;
+  --btn-fill-bg:  var(--ink-strong);
+  --btn-fill-ink: var(--paper-lit);
+
+  /* Texture */
+  --tex-blend:    multiply;
+  --tex-page:     0.15;
+  --tex-leaf:     0.18;
+  --tex-plate:    0.30;
+
+  /* Type */
+  --face-title:   "IM Fell English", "EB Garamond", Georgia, serif;
+  --face-caps:    "IM Fell English SC", "Cinzel", Georgia, serif;
+  --face-roman:   "Cinzel", "IM Fell English SC", Georgia, serif;
+  --face-body:    "EB Garamond", "IM Fell English", Georgia, serif;
+  --face-hand:    "Caveat", "Segoe Script", cursive;
+  --face-tech:    "Courier Prime", "Courier New", ui-monospace, monospace;
+
+  --fibre: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.62' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+  --blotch: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='420' height='420'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%25' height='100%25' filter='url(%23f)'/></svg>");
+}
+
+/* --------------------------------------------------------------- NIGHT */
+/* The same codex read by candlelight: the paper has gone brown-black, the
+   ink has gone to warm bone, and the accents are lifted just enough to
+   survive on a dark ground. Nothing glows. */
+
+:root[data-theme="night"] {
+  color-scheme: dark;
+
+  --paper-lit:    #262019;
+  --paper:        #1d1813;
+  --paper-aged:   #17130f;
+  --paper-shade:  #0f0c09;
+  --desk:         #0d0b08;
+  --desk-dark:    #080706;
+
+  --ink-strong:   #f4e8ca;
+  --ink:          #ddd0b0;
+  --ink-soft:     #a3947a;
+  --ink-faint:    #6f6552;
+
+  --rule:         rgba(221, 208, 176, 0.30);
+  --rule-soft:    rgba(221, 208, 176, 0.14);
+  --rule-strong:  rgba(244, 232, 202, 0.52);
+
+  --rubric:       #c65a45;
+  --rubric-deep:  #8e3325;
+  --verdigris:    #8b9c66;
+  --gold-leaf:    #c6a45f;
+  --indigo:       #8ba4bf;
+
+  --wash-rubric:  rgba(198, 90, 69, 0.12);
+  --wash-band:    rgba(244, 232, 202, 0.05);
+  --wash-gold:    rgba(198, 164, 95, 0.10);
+
+  --survey-bg:    #2e2620;
+  --plate-bg:     #120f0c;
+  --plate-ink:    #ddd0b0;
+  --btn-fill-bg:  var(--ink);
+  --btn-fill-ink: #1a1510;
+
+  --tex-blend:    overlay;
+  --tex-page:     0.10;
+  --tex-leaf:     0.11;
+  --tex-plate:    0.16;
+}
+
+/* ------------------------------------------------------------ the world */
+
+html { background: var(--desk-dark); }
+
+.codex {
+  min-height: 100vh;
+  background-color: var(--paper);
+  color: var(--ink);
+  font-family: var(--face-body);
+  font-size: 18.5px;
+  line-height: 1.7;
+  position: relative;
+  border-left: 1px solid var(--rule-soft);
+  border-right: 1px solid var(--rule-soft);
+}
+.codex::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--blotch), var(--fibre);
+  background-size: 640px 640px, 170px 170px;
+  opacity: var(--tex-page);
+  mix-blend-mode: var(--tex-blend);
+}
+.codex > * { position: relative; z-index: 1; }
+
+/* --------------------------------------------------------------- leaves
+   Four tiers of surface, and nothing between them. The tier says how much
+   the thing matters; the tone and the ruling do the saying.
+
+     .leaf--chapter  the one thing on the page that wants you
+     .leaf           an ordinary sheet
+     .leaf--aged     a quiet aside
+     .slip           a pasted-in note
+   ------------------------------------------------------------------------ */
+
+.leaf {
+  position: relative;
+  background-color: var(--paper-lit);
+  border: 1px solid var(--rule);
+  color: var(--ink);
+}
+.leaf::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--blotch), var(--fibre);
+  background-size: 520px 520px, 150px 150px;
+  opacity: var(--tex-leaf);
+  mix-blend-mode: var(--tex-blend);
+}
+.leaf > * { position: relative; }
+
+.leaf--lit   { background-color: var(--paper); }
+.leaf--aged  { background-color: var(--paper-aged); border-color: var(--rule-soft); }
+
+/* the first tier: a heavier frame and a struck band across the head */
+.leaf--chapter {
+  background-color: var(--paper-lit);
+  border: 1px solid var(--rule-strong);
+  border-top-width: 5px;
+}
+
+.leaf--ruled { padding: 10px; }
+.leaf--ruled > .leaf-field {
+  border: 1px solid var(--rule-soft);
+  padding: 1.8rem 1.4rem;
+}
+@media (min-width: 640px) {
+  .leaf--ruled > .leaf-field { padding: 2.8rem 3rem; }
+}
+
+.quire { position: relative; padding: 0 6px 6px 0; }
+.quire::after {
+  content: "";
+  position: absolute;
+  left: 6px; right: 0; top: 6px; bottom: 0;
+  background-color: var(--paper-shade);
+  border: 1px solid var(--rule-soft);
+  z-index: -1;
+}
+
+.slip {
+  background-color: var(--paper-aged);
+  border: 1px solid var(--rule-soft);
+  padding: 1.15rem 1.3rem;
+}
+/* a slip that carries the live thing gets a rubric edge, like a wax tab */
+.slip--marked { border-left: 3px solid var(--rubric); }
+
+/* board / stone */
+.plate {
+  background-color: var(--plate-bg);
+  border: 1px solid var(--rule-strong);
+  color: var(--plate-ink);
+  position: relative;
+}
+.plate::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--fibre);
+  background-size: 150px 150px;
+  opacity: var(--tex-plate);
+  mix-blend-mode: overlay;
+}
+.plate > * { position: relative; }
+
+/* A ribbon tab, sewn to the top of the sheet you are meant to read first. */
+.ribbon {
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  background-color: var(--rubric);
+  color: #f6ece0;
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.6rem;
+  padding: 0.35em 0.9em 0.3em;
+  z-index: 3;
+}
+
+/* ----------------------------------------------------------- typography
+   A real ladder, five rungs. Size, colour and tracking all move together,
+   so the tier is legible before a word is read. */
+
+.t-folio {
+  font-family: var(--face-title);
+  font-size: clamp(2.5rem, 5.4vw, 4.1rem);
+  line-height: 1.02;
+  color: var(--ink-strong);
+}
+.t-chapter {
+  font-family: var(--face-title);
+  font-size: clamp(1.7rem, 2.9vw, 2.35rem);
+  line-height: 1.1;
+  color: var(--ink-strong);
+}
+.t-entry {
+  font-family: var(--face-title);
+  font-size: 1.45rem;
+  line-height: 1.18;
+  color: var(--ink-strong);
+}
+.t-minor {
+  font-family: var(--face-title);
+  font-size: 1.12rem;
+  line-height: 1.25;
+  color: var(--ink-strong);
+}
+
+/* kept for prose headings inside markdown and older pages */
+.t-title {
+  font-family: var(--face-title);
+  font-weight: 400;
+  color: var(--ink-strong);
+  line-height: 1.14;
+}
+
+.t-lead  { font-size: 1.28rem; line-height: 1.6; color: var(--ink); }
+.t-body  { font-size: 1.1rem; line-height: 1.7; color: var(--ink); }
+.t-small { font-size: 1.02rem; line-height: 1.66; color: var(--ink-soft); }
+
+.t-roman {
+  font-family: var(--face-roman);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-strong);
+}
+.t-caps {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+/* the eyebrow above a title: rubric, because it says where you are */
+.t-eyebrow {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--rubric);
+}
+.t-hand {
+  font-family: var(--face-hand);
+  font-size: 1.2rem;
+  line-height: 1.4;
+  color: var(--indigo);
+}
+.t-tech {
+  font-family: var(--face-tech);
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
+}
+/* a figure that is a reward is always gold, everywhere in the book */
+.t-figure {
+  font-family: var(--face-roman);
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+  color: var(--gold-leaf);
+}
+.t-rubric { color: var(--rubric); }
+.t-soft   { color: var(--ink-soft); }
+.t-faint  { color: var(--ink-faint); }
+.t-done   { color: var(--verdigris); }
+
+.dropcap::first-letter {
+  float: left;
+  font-family: var(--face-title);
+  font-size: 3.6em;
+  line-height: 0.76;
+  padding: 0.06em 0.12em 0 0;
+  color: var(--rubric);
+}
+
+/* The measure is set in characters, not rems: a line holds roughly 65–75
+   letters whatever the size, which is where the eye stops losing its place. */
+.column { max-width: 58ch; }
+.column-wide { max-width: 68ch; }
+
+/* a label always stands clear of what it introduces */
+.label-gap { display: block; margin-bottom: 0.55rem; }
+
+/* paragraphs in running prose are spaced, never butted together */
+.prose-flow > * + * { margin-top: 1.1em; }
+
+/* --------------------------------------------------------------- rules */
+
+.rule       { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
+.rule--tight{ margin: 1.15rem 0; }
+.rule--double {
+  border: 0;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+  height: 3px;
+  margin: 1.6rem 0;
+}
+.rule--vertical { border-left: 1px solid var(--rule-soft); }
+
+/* a section head: title inside a broken rule, numbered like a chapter */
+.rule-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 4.5rem 0 2rem;
+}
+.rule-head::before,
+.rule-head::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--rule);
+}
+.rule-head > span {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.24em;
+  font-size: 0.8rem;
+  color: var(--ink-strong);
+  white-space: nowrap;
+}
+.rule-head > span .sec-no {
+  color: var(--rubric);
+  letter-spacing: 0.14em;
+  margin-right: 0.5em;
+}
+/* the quieter variety, for a head inside a panel */
+.rule-head--quiet > span { color: var(--ink-soft); font-size: 0.72rem; }
+.rule-head--quiet { margin: 2.2rem 0 1.2rem; }
+/* On a phone a long head wraps inside its rule instead of pushing the page
+   wider; the rules either side shrink to short flourishes. */
+@media (max-width: 560px) {
+  .rule-head > span { white-space: normal; text-align: center; letter-spacing: 0.18em; }
+  .rule-head::before,
+  .rule-head::after { min-width: 1.4rem; }
+}
+
+/* ------------------------------------------------------- dotted leaders */
+
+.leader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.04rem;
+  line-height: 1.9;
+}
+.leader-fill {
+  flex: 1;
+  border-bottom: 1px dotted var(--ink-faint);
+  transform: translateY(-0.28em);
+}
+.leader-value {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  text-align: right;
+  max-width: 62%;
+}
+
+/* ------------------------------------------------------------- marginal */
+
+.margin-note {
+  font-family: var(--face-hand);
+  font-size: 1.2rem;
+  line-height: 1.38;
+  color: var(--indigo);
+  transform: rotate(-1.4deg);
+}
+.margin-note--right { transform: rotate(1.1deg); }
+
+.spread {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.6rem;
+}
+@media (min-width: 900px) {
+  .spread { grid-template-columns: minmax(0, 1fr) 16rem; gap: 3.2rem; }
+  .spread--margin-left { grid-template-columns: 16rem minmax(0, 1fr); }
+}
+
+/* ------------------------------------------------------------ ink marks */
+
+.stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.17em;
+  font-size: 0.63rem;
+  padding: 0.3em 0.6em;
+  white-space: nowrap;
+  border: 1px solid currentColor;
+  color: var(--ink-soft);
+  background: transparent;
+}
+.stamp--rubric { color: var(--rubric); background-color: var(--wash-rubric); }
+.stamp--green  { color: var(--verdigris); }
+.stamp--gold   { color: var(--gold-leaf); background-color: var(--wash-gold); }
+.stamp--faint  { color: var(--ink-faint); border-style: dashed; }
+.stamp--pressed { transform: rotate(-2deg); }
+
+.struck { color: var(--ink-faint); text-decoration: line-through; }
+
+.seal {
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background-color: var(--rubric-deep);
+  color: rgba(255, 240, 230, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  clip-path: polygon(
+    50% 0%, 66% 4%, 79% 11%, 91% 22%, 96% 36%, 100% 51%,
+    95% 66%, 87% 79%, 74% 91%, 59% 97%, 44% 100%, 30% 94%,
+    17% 86%, 7% 74%, 2% 59%, 0% 44%, 5% 29%, 13% 16%, 26% 7%, 39% 2%
+  );
+}
+.seal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--fibre);
+  background-size: 90px 90px;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+}
+.seal--broken { background-color: var(--ink-faint); }
+
+/* ------------------------------------------------------------- buttons */
+
+.ink-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.76rem;
+  padding: 0.75em 1.45em;
+  color: var(--ink-strong);
+  background-color: transparent;
+  border: 1px solid var(--rule-strong);
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.14s linear, color 0.14s linear;
+}
+.ink-btn:hover { background-color: var(--ink-strong); color: var(--paper-lit); }
+.ink-btn:active { transform: translateY(1px); }
+.ink-btn:disabled {
+  color: var(--ink-faint);
+  border-color: var(--rule-soft);
+  border-style: dashed;
+  cursor: not-allowed;
+}
+.ink-btn:disabled:hover { background-color: transparent; color: var(--ink-faint); }
+
+.ink-btn--filled { background-color: var(--btn-fill-bg); color: var(--btn-fill-ink); border-color: var(--btn-fill-bg); }
+.ink-btn--filled:hover { background-color: var(--rubric); border-color: var(--rubric); color: #f6ece0; }
+.ink-btn--rubric { color: var(--rubric); border-color: var(--rubric); }
+.ink-btn--rubric:hover { background-color: var(--rubric); color: #f6ece0; }
+.ink-btn--small { padding: 0.42em 0.85em; font-size: 0.63rem; letter-spacing: 0.14em; }
+.ink-btn--plain { border: 0; padding: 0.3em 0; letter-spacing: 0.16em; }
+.ink-btn--plain:hover { background: transparent; color: var(--rubric); }
+
+.ink-link {
+  color: var(--ink-strong);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: var(--rule);
+}
+.ink-link:hover { color: var(--rubric); text-decoration-color: var(--rubric); }
+
+/* --------------------------------------------------------------- gauges */
+
+.measure {
+  height: 13px;
+  border: 1px solid var(--rule-strong);
+  background-color: transparent;
+  display: flex;
+  padding: 2px;
+  gap: 2px;
+}
+.measure-cell { flex: 1; background-color: transparent; }
+.measure-cell--full { background-color: var(--ink-strong); }
+.measure--rubric .measure-cell--full { background-color: var(--rubric); }
+.measure--gold .measure-cell--full { background-color: var(--gold-leaf); }
+
+.pips { display: inline-flex; gap: 3px; }
+.pip {
+  width: 7px; height: 7px;
+  border: 1px solid var(--ink-soft);
+  transform: rotate(45deg);
+}
+.pip--full { background-color: var(--ink-strong); border-color: var(--ink-strong); }
+
+.stars { letter-spacing: 0.16em; color: var(--ink-strong); font-size: 0.95rem; }
+.stars .dim { color: var(--ink-faint); }
+
+/* ----------------------------------------------------------- the ledger */
+
+.ledger { width: 100%; border-collapse: collapse; }
+.ledger caption {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  text-align: left;
+  padding-bottom: 0.7rem;
+}
+.ledger thead tr { background-color: var(--wash-band); }
+.ledger th {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-size: 0.63rem;
+  font-weight: 400;
+  color: var(--ink-strong);
+  text-align: left;
+  padding: 0.75rem 0.85rem;
+  border-top: 1px solid var(--rule-strong);
+  border-bottom: 1px solid var(--rule-strong);
+  white-space: nowrap;
+}
+.ledger .t-caps { white-space: nowrap; }
+.ledger td {
+  padding: 1.05rem 0.85rem;
+  border-bottom: 1px solid var(--rule-soft);
+  vertical-align: top;
+}
+.ledger tbody tr:hover { background-color: var(--wash-band); }
+.ledger tr.is-you { background-color: var(--wash-rubric); }
+.ledger tr.is-now {
+  background-color: var(--wash-rubric);
+  box-shadow: inset 3px 0 0 var(--rubric);
+}
+.ledger tr.is-locked td { color: var(--ink-faint); }
+.ledger tr.is-locked .t-title,
+.ledger tr.is-locked .t-minor { color: var(--ink-faint); }
+.ledger-num {
+  font-family: var(--face-roman);
+  font-size: 0.85rem;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+.entry { padding: 2.2rem 0; border-bottom: 1px solid var(--rule-soft); }
+.entry:first-child { padding-top: 0; }
+.entry:last-child { border-bottom: 0; }
+.entry--obscured { color: var(--ink-faint); }
+.entry--obscured .t-title,
+.entry--obscured .t-entry,
+.entry--obscured .t-chapter { color: var(--ink-faint); }
+
+/* ------------------------------------------------------------ technical */
+
+.typed {
+  font-family: var(--face-tech);
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: var(--ink);
+  background-color: var(--paper-aged);
+  border: 1px solid var(--rule-soft);
+  border-left: 2px solid var(--ink-soft);
+  padding: 0.7rem 0.9rem;
+  overflow-x: auto;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.typed--redacted { color: var(--ink-faint); letter-spacing: 0.1em; }
+
+/* ------------------------------------------------------------- obscured */
+
+.obscured { position: relative; }
+.obscured > * { opacity: 0.42; filter: blur(0.4px); }
+.obscured::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  pointer-events: none;
+  background-image: var(--blotch);
+  background-size: 380px 380px;
+  opacity: 0.5;
+  mix-blend-mode: var(--tex-blend);
+}
+
+/* ------------------------------------------------------------ ornaments */
+
+.ornament { color: var(--ink-soft); display: block; }
+.ornament--center { margin: 1.4rem auto; }
+
+/* --------------------------------------------------------------- header */
+
+.codex-head {
+  border-bottom: 1px solid var(--rule-strong);
+  background-color: var(--paper-aged);
+  position: relative;
+}
+.codex-head::before {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--fibre);
+  background-size: 150px 150px;
+  opacity: var(--tex-leaf);
+  mix-blend-mode: var(--tex-blend);
+}
+.codex-head > * { position: relative; }
+
+.codex-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 1rem;
+  min-width: 0;
+}
+.codex-nav a {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+  padding: 0.35rem 0;
+  border-bottom: 1px solid transparent;
+  white-space: nowrap;
+}
+.codex-nav a:hover { color: var(--ink-strong); }
+.codex-nav a.is-here {
+  color: var(--rubric);
+  border-bottom-color: var(--rubric);
+}
+
+@media (max-width: 780px) {
+  .codex-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 0 0.95rem;
+    padding-bottom: 3px;
+    scrollbar-width: none;
+  }
+  .codex-nav::-webkit-scrollbar { display: none; }
+}
+
+/* the lamp: a candle you light to read the book at night */
+.lamp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.62rem;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--rule-soft);
+  padding: 0.35em 0.6em;
+  cursor: pointer;
+}
+.lamp-btn:hover { color: var(--ink-strong); border-color: var(--rule); }
+.lamp-btn .flame { color: var(--gold-leaf); }
+
+.colophon {
+  border-top: 1px solid var(--rule-strong);
+  background-color: var(--paper-aged);
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  position: relative;
+}
+.colophon::before {
+  content: "";
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: var(--fibre);
+  background-size: 150px 150px;
+  opacity: var(--tex-leaf);
+  mix-blend-mode: var(--tex-blend);
+}
+.colophon > * { position: relative; }
+.colophon a { color: var(--ink-strong); }
+.colophon a:hover { color: var(--rubric); }
+
+/* ---------------------------------------------------------------- misc */
+
+.field-input {
+  width: 100%;
+  font-family: var(--face-body);
+  font-size: 1rem;
+  color: var(--ink);
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule-strong);
+  padding: 0.4rem 0.2rem;
+  outline: none;
+}
+.field-input::placeholder { color: var(--ink-faint); font-style: italic; }
+.field-input:focus { border-bottom-color: var(--rubric); }
+
+.field-select {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.66rem;
+  color: var(--ink-strong);
+  background-color: var(--paper);
+  border: 1px solid var(--rule-strong);
+  padding: 0.45em 0.7em;
+  outline: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
