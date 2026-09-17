@@ -5,8 +5,8 @@ import RealmMap from "../components/ms/RealmMap";
 import { RuleHead, Stamp, Fleuron, Mark } from "../components/ms/Codex";
 import { roman } from "../utils/numerals";
 import { kingdomById } from "../data/realm";
-import { chaptersOf } from "../data/chapters";
-import { PLACES, placeById } from "../data/world";
+import { chaptersOf, chaptersWithBoss } from "../data/chapters";
+import { PLACES } from "../data/world";
 import { deriveRealm } from "../data/progress";
 import { useQuests } from "../useQuests";
 import { useHunter } from "../hunter-context";
@@ -27,36 +27,45 @@ const STATUS = {
 };
 
 function ChapterLedger({ kingdomId, quests }) {
-  const chapters = chaptersOf(kingdomId);
+  const chapters = chaptersWithBoss(kingdomId);
   return (
     <div className="overflow-x-auto">
       <table className="ledger">
         <thead>
           <tr>
-            <th style={{ width: "3.2rem" }}>№</th>
+            <th style={{ width: "3.4rem" }}>№</th>
             <th style={{ minWidth: "16rem" }}>Chapter</th>
-            {kingdomId === "web" && <th>Place</th>}
+            <th style={{ width: "6rem" }}>Lessons</th>
             <th style={{ width: "13rem" }}>Standing</th>
             <th style={{ width: "7rem" }} />
           </tr>
         </thead>
         <tbody>
           {chapters.map((c, i) => {
+            const isBoss = Boolean(c.finalBoss);
             const quest = c.place ? quests.find((q) => q.place === c.place && q.kingdom === kingdomId) : null;
             const st = quest ? STATUS[quest.status] || STATUS.available : null;
             return (
-              <tr key={c.title} className={quest ? "" : "is-locked"}>
-                <td className="ledger-num">{roman(i + 1)}</td>
-                <td>
-                  <span className="t-minor">{c.title}</span>
-                  <span className="block t-small mt-1">{c.topic}</span>
-                </td>
-                {kingdomId === "web" && <td className="t-hand">{placeById(c.place)?.name}</td>}
-                <td>
-                  {st ? <Stamp tone={st.tone} pressed={quest.status === "completed"}>{st.word}</Stamp> : <Stamp tone="faint">Being written</Stamp>}
+              <tr key={c.id} className={quest || isBoss ? "" : "is-locked"}>
+                <td className="ledger-num" style={isBoss ? { color: "var(--rubric)" } : undefined}>
+                  {isBoss ? "★" : roman(i + 1)}
                 </td>
                 <td>
-                  {quest && <Link to={`/quests/${quest.slug}`} className="t-caps">The quest →</Link>}
+                  <Link to={`/kingdoms/${kingdomId}/${c.place}`} className="t-minor" style={isBoss ? { color: "var(--rubric)" } : undefined}>{c.title}</Link>
+                  <span className="block t-small mt-1">{c.real}</span>
+                </td>
+                <td className="t-hand">{isBoss ? "—" : c.topics.length}</td>
+                <td>
+                  {isBoss ? (
+                    <Stamp tone="rubric">Final Boss</Stamp>
+                  ) : st ? (
+                    <Stamp tone={st.tone} pressed={quest.status === "completed"}>{st.word}</Stamp>
+                  ) : (
+                    <Stamp tone="faint">Being written</Stamp>
+                  )}
+                </td>
+                <td>
+                  <Link to={`/kingdoms/${kingdomId}/${c.place}`} className="t-caps">Open →</Link>
                 </td>
               </tr>
             );
@@ -103,7 +112,7 @@ export default function KingdomPage() {
         </div>
         <Fleuron width={190} className="mt-5" />
         <p className="t-lead column mt-6">{k.gloss}</p>
-        <p className="t-caps mt-4">{roman(chapters.length)} chapters · each one a quest</p>
+        <p className="t-caps mt-4">{chapters.length} chapters &amp; a Final Boss · each a place on the map</p>
       </header>
 
       <RuleHead no={1}>The map of the kingdom</RuleHead>

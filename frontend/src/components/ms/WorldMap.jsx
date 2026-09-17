@@ -106,6 +106,7 @@ export function Reeds({ x, y, n = 7, seed = 5 }) {
 
 /* ------------------------------------------------------- place glyphs */
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const GLYPH = {
   village: ({ x, y }) => (
     <g>
@@ -286,6 +287,7 @@ export function Serpent({ x, y }) {
 
 /* ---------------------------------------------------------------- roads */
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function roadPath(a, b, kind, seed) {
   const j = hand(seed);
   const mx = (a.x + b.x) / 2 + j(28);
@@ -500,15 +502,10 @@ function PlaceReading({ p, quests, onClose }) {
       </div>
 
       <div className="flex flex-col gap-3 mt-6">
-        {sealed ? (
-          <Link to="/oath" className="ink-btn ink-btn--rubric">Swear the oath</Link>
-        ) : offSurvey ? (
-          <p className="t-small">No road reaches it yet. Walk the ground next to it first.</p>
-        ) : quests.length ? (
-          <Link to={`/quests?place=${p.id}`} className="ink-btn ink-btn--filled">Read the quests</Link>
-        ) : (
-          <p className="t-small">Its quests are still being copied into the journal.</p>
-        )}
+        {quests.length ? (
+          <Link to={`/quests/${quests[0].slug}`} className="ink-btn ink-btn--filled">Read the quest</Link>
+        ) : null}
+        <Link to={`/kingdoms/web/${p.id}`} className={`ink-btn ${quests.length ? "" : "ink-btn--filled"}`}>Open the chapter</Link>
         {dungeons[0] && !barred && (
           <Link to={`/dungeons/${dungeons[0].slug}`} className="ink-btn">The plan of {dungeons[0].name}</Link>
         )}

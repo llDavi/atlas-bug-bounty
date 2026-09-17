@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { kingdomMap } from "../../data/kingdomMaps";
+import { chaptersWithBoss } from "../../data/chapters";
 import { kingdomById } from "../../data/realm";
 import { roman } from "../../utils/numerals";
 import { Stamp, Fleuron, Mark } from "./Codex";
@@ -104,8 +105,10 @@ export default function RealmMap({ kingdomId, quests = [] }) {
   const def = kingdomMap(kingdomId);
   const [chosen, setChosen] = useState(null);
 
-  const byIndex = useMemo(() => def?.places || [], [def]);
-  const chapter = chosen == null ? null : byIndex[chosen];
+  // The map's geometry (kingdomMaps) is zipped with the curriculum (chapters):
+  // place[i] is chapter[i]; the last chapter is the kingdom's Final Boss.
+  const chapters = useMemo(() => chaptersWithBoss(kingdomId), [kingdomId]);
+  const chapter = chosen == null ? null : chapters[chosen];
   const chapterQuest = chapter?.place
     ? quests.find((q) => q.place === chapter.place && q.kingdom === kingdomId)
     : null;
@@ -169,21 +172,24 @@ export default function RealmMap({ kingdomId, quests = [] }) {
               </g>
             ))}
 
-            {/* ---- the places: one per chapter ---- */}
+            {/* ---- the places: one per chapter, the last one the Final Boss ---- */}
             {def.places.map((p, i) => {
-              const Glyph = glyphFor(p.kind);
-              const written = p.place && quests.some((q) => q.place === p.place && q.kingdom === kingdomId);
+              const ch = chapters[i];
+              if (!ch) return null;
+              const isBoss = Boolean(ch.finalBoss);
+              const Glyph = isBoss ? GLYPH.dungeon : glyphFor(p.kind);
+              const written = ch.place && quests.some((q) => q.place === ch.place && q.kingdom === kingdomId);
               const lp = labelPos(p);
-              const lines = wrapName(p.name);
+              const lines = wrapName(ch.title);
               const firstY = lp.anchor === "middle" && lp.y < p.y ? lp.y - (lines.length - 1) * 16 : lp.y;
               const lastY = firstY + (lines.length - 1) * 16;
               return (
                 <g
-                  key={p.name}
+                  key={ch.id}
                   className={`place place--drawn ${chosen === i ? "is-chosen" : ""}`}
                   tabIndex={0}
                   role="button"
-                  aria-label={`Chapter ${i + 1}: ${p.name}`}
+                  aria-label={`${isBoss ? "Final Boss" : `Chapter ${i + 1}`}: ${ch.title}`}
                   onClick={() => setChosen((c) => (c === i ? null : i))}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
@@ -194,12 +200,14 @@ export default function RealmMap({ kingdomId, quests = [] }) {
                 >
                   <circle className="place-halo" cx={p.x} cy={p.y - 12} r="50" />
                   <Glyph x={p.x} y={p.y} />
-                  <text className="place-index" x={lp.x} y={firstY - 15} textAnchor={lp.anchor}>{roman(i + 1)}</text>
+                  <text className="place-index" x={lp.x} y={firstY - 15} textAnchor={lp.anchor} style={isBoss ? { fill: "var(--rubric)" } : undefined}>
+                    {isBoss ? "Final Boss" : roman(i + 1)}
+                  </text>
                   {lines.map((line, li) => (
-                    <text key={line} className="place-name" x={lp.x} y={firstY + li * 16} textAnchor={lp.anchor}>{line}</text>
+                    <text key={line} className="place-name" x={lp.x} y={firstY + li * 16} textAnchor={lp.anchor} style={isBoss ? { fill: "var(--rubric)" } : undefined}>{line}</text>
                   ))}
-                  <text className="place-gloss" x={lp.x} y={lastY + 18} textAnchor={lp.anchor}>{p.domain}</text>
-                  {!written && (
+                  <text className="place-gloss" x={lp.x} y={lastY + 18} textAnchor={lp.anchor}>{ch.real}</text>
+                  {!isBoss && !written && (
                     <text className="place-gloss place-gloss--faint" x={lp.x} y={lastY + 34} textAnchor={lp.anchor}>being written</text>
                   )}
                 </g>
@@ -234,20 +242,43 @@ export default function RealmMap({ kingdomId, quests = [] }) {
         {chapter ? (
           <div className="leaf leaf--lit quire" style={{ padding: "1.8rem 1.9rem" }}>
             <div className="flex items-start justify-between gap-3">
-              <p className="t-caps">Chapter {roman(chosen + 1)}</p>
+              <p className="t-caps" style={chapter.finalBoss ? { color: "var(--rubric)" } : undefined}>
+                {chapter.finalBoss ? "Final Boss" : `Chapter ${roman(chosen + 1)}`}
+              </p>
               <button type="button" onClick={() => setChosen(null)} className="t-caps" style={{ color: "var(--ink-faint)" }}>Close</button>
             </div>
-            <h3 className="t-entry mt-3">{chapter.name}</h3>
-            <p className="t-hand mt-1.5">{chapter.domain}</p>
+            <h3 className="t-entry mt-3">{chapter.title}</h3>
+            <p className="t-hand mt-1.5">{chapter.real}</p>
             <hr className="rule rule--tight" />
-            <div className="flex flex-wrap gap-2">
-              <Stamp tone={chapterQuest ? "" : "faint"}>{chapterQuest ? "Quest written" : "Being written"}</Stamp>
-            </div>
-            {chapterQuest ? (
-              <Link to={`/quests/${chapterQuest.slug}`} className="ink-btn ink-btn--filled w-full mt-6">Read the quest</Link>
+
+            {chapter.finalBoss ? (
+              <>
+                <p className="t-small">{chapter.brief}</p>
+                <div className="flex flex-wrap gap-2 mt-5"><Stamp tone="rubric">The last trial</Stamp></div>
+              </>
             ) : (
-              <p className="t-small mt-5">Its quest is still being copied into the journal. The chapter is named and its place is drawn.</p>
+              <>
+                <p className="t-caps label-gap">Its lessons ({chapter.topics.length})</p>
+                <ul className="flex flex-col gap-1">
+                  {chapter.topics.slice(0, 6).map((t) => (
+                    <li key={t} className="t-small">{t}</li>
+                  ))}
+                </ul>
+                {chapter.topics.length > 6 && (
+                  <p className="t-caps mt-1" style={{ color: "var(--ink-faint)" }}>and {chapter.topics.length - 6} more</p>
+                )}
+                <div className="flex flex-wrap gap-2 mt-5">
+                  <Stamp tone={chapterQuest ? "" : "faint"}>{chapterQuest ? "Quest written" : "Being written"}</Stamp>
+                  {chapter.trial && <Stamp tone="faint">{chapter.trial.kind === "dungeon" ? "Dungeon" : "Boss"} at its end</Stamp>}
+                </div>
+                {chapterQuest && (
+                  <Link to={`/quests/${chapterQuest.slug}`} className="ink-btn ink-btn--filled w-full mt-6">Read the quest</Link>
+                )}
+              </>
             )}
+            <Link to={`/kingdoms/${kingdomId}/${chapter.place}`} className="ink-btn w-full mt-3">
+              {chapter.finalBoss ? "The final trial" : "Open the chapter"}
+            </Link>
           </div>
         ) : (
           <div className="leaf leaf--aged" style={{ padding: "1.8rem 1.9rem" }}>

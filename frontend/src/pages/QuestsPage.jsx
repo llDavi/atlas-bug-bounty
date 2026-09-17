@@ -6,7 +6,7 @@ import { roman } from "../utils/numerals";
 import { api } from "../api";
 import { useHunter } from "../hunter-context";
 import { KINGDOMS, kingdomById } from "../data/realm";
-import { chaptersOf } from "../data/chapters";
+import { chaptersOf, chaptersWithBoss } from "../data/chapters";
 import { placeById } from "../data/world";
 import { DUNGEONS } from "../data/dungeons";
 
@@ -35,19 +35,23 @@ const QUEST_NOTE = {
   locked: { label: "further on", color: "var(--ink-faint)" },
 };
 
-/* One lesson line: rubricated number, title, and a note on its standing. */
+/* One lesson line: rubricated number, title, and a note on its standing.
+   The final boss is the last line, set in the rubric. */
 function Lesson({ chapter, number, quest }) {
+  const isBoss = Boolean(chapter.finalBoss);
   const written = Boolean(quest);
   const note = quest ? QUEST_NOTE[quest.status] || QUEST_NOTE.available : null;
   return (
-    <div className={`lesson ${written ? "" : "lesson--unwritten"}`}>
-      <span className="lesson-no">{roman(number)}</span>
+    <div className={`lesson ${written || isBoss ? "" : "lesson--unwritten"}`}>
+      <span className="lesson-no" style={isBoss ? { color: "var(--rubric)" } : undefined}>{isBoss ? "★" : roman(number)}</span>
       {written ? (
         <Link to={`/quests/${quest.slug}`} className="lesson-title">{chapter.title}</Link>
       ) : (
-        <span className="lesson-title">{chapter.title}</span>
+        <span className="lesson-title" style={isBoss ? { color: "var(--rubric)" } : undefined}>{chapter.title}</span>
       )}
-      {written ? (
+      {isBoss ? (
+        <span className="lesson-note" style={{ color: "var(--rubric)" }}>final boss</span>
+      ) : written ? (
         <span className="lesson-note" style={{ color: note.color }}>
           {quest.xp} XP · {note.label}
         </span>
@@ -113,7 +117,7 @@ export default function QuestsPage() {
     return order
       .map((id) => {
         const kingdom = kingdomById(id);
-        let chapters = chaptersOf(id).map((c, i) => ({ chapter: c, number: i + 1 }));
+        let chapters = chaptersWithBoss(id).map((c, i) => ({ chapter: c, number: i + 1 }));
         // Every current dungeon sits at a Web Realm place.
         let dungeons = (id === "web" ? DUNGEONS : []);
         if (placeFilter) {
@@ -164,7 +168,8 @@ export default function QuestsPage() {
       {!error &&
         groups.map((g) => {
           const accent = ACCENT[g.kingdom.id] || "var(--rule-strong)";
-          const written = g.chapters.filter((e) => e.chapter.place && writtenByKey[`${g.kingdom.id}:${e.chapter.place}`]).length;
+          const total = chaptersOf(g.kingdom.id).length;
+          const written = g.chapters.filter((e) => !e.chapter.finalBoss && e.chapter.place && writtenByKey[`${g.kingdom.id}:${e.chapter.place}`]).length;
           const followed = hunter?.kingdoms?.includes(g.kingdom.id);
           return (
             <section key={g.kingdom.id} className="mb-14">
@@ -178,7 +183,7 @@ export default function QuestsPage() {
                   <p className="t-small mt-1">{g.kingdom.gloss}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="t-caps">{written} of {g.chapters.length} written</p>
+                  <p className="t-caps">{written} of {total} written</p>
                   <Link to={`/kingdoms/${g.kingdom.id}`} className="t-caps" style={{ color: "var(--rubric)" }}>the map →</Link>
                 </div>
               </div>

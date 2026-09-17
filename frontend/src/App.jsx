@@ -18,6 +18,7 @@ import CharterPage from "./pages/CharterPage";
 import QuestionsPage from "./pages/QuestionsPage";
 import QuestPage from "./pages/QuestPage";
 import KingdomPage from "./pages/KingdomPage";
+import ChapterPage from "./pages/ChapterPage";
 import RegisterPage from "./pages/RegisterPage";
 import RequireHunter from "./RequireHunter";
 import HunterProvider from "./HunterProvider";
@@ -98,6 +99,7 @@ export default function App() {
 
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/kingdoms/:id" element={<KingdomPage />} />
+          <Route path="/kingdoms/:id/:place" element={<ChapterPage />} />
           <Route path="/quests" element={<QuestsPage />} />
           <Route path="/quests/:slug" element={<RequireHunter what="this quest"><QuestPage /></RequireHunter>} />
           <Route path="/dungeons" element={<DungeonsPage />} />

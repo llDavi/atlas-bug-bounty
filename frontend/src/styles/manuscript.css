@@ -295,6 +295,22 @@ html { background: var(--desk-dark); }
 .trial:last-child { border-bottom: 0; }
 .trial-mark { color: var(--ink-soft); flex-shrink: 0; margin-top: 0.15rem; }
 
+/* a chapter's topics, set as a manuscript index of micro-lessons */
+.topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0 2.4rem;
+}
+.topic {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rule-hair, var(--rule-soft));
+}
+.topic-no { font-family: var(--face-roman); font-size: 0.72rem; color: var(--rubric); opacity: 0.75; min-width: 1.5rem; }
+.topic-name { font-family: var(--face-title); font-size: 1rem; color: var(--ink-strong); }
+
 /* board / stone */
 .plate {
   background-color: var(--plate-bg);
