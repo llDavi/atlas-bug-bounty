@@ -24,15 +24,15 @@ export const DUNGEONS = [
     difficulty: 2,
     reward: 400,
     hours: "45 minutes",
-    state: "open",
+    state: "digging",
     depth: 3,
     gloss:
       "Nobody has held this castle in years, and yet the gate lamp still burns and the well still draws. Somebody is paying for that.",
     entrance:
       "You are given a name and nothing else. By the time you leave you should be able to draw the castle from memory, including the doors that are not on the plan.",
     chambers: [
-      { no: 1, done: true, task: "Survey every wall, tower and outbuilding still answering to the castle's name.", craft: "Subdomain enumeration" },
-      { no: 2, done: true, task: "Find the postern gate: a path that answers but appears on no notice board.", craft: "Content discovery" },
+      { no: 1, done: false, task: "Survey every wall, tower and outbuilding still answering to the castle's name.", craft: "Subdomain enumeration" },
+      { no: 2, done: false, task: "Find the postern gate: a path that answers but appears on no notice board.", craft: "Content discovery" },
       { no: 3, done: false, task: "Open what the postern protects, using only what the walls told you.", craft: "Forced browsing" },
       { no: 4, done: false, task: "Establish what a stranger could reach through it, and go no further.", craft: "Impact assessment" },
       { no: 5, done: false, task: "Draw the castle. Mark the postern. Name the mason who should close it.", craft: "The write-up" },
@@ -47,7 +47,7 @@ export const DUNGEONS = [
     difficulty: 3,
     reward: 650,
     hours: "1 hour",
-    state: "open",
+    state: "digging",
     depth: 2,
     gloss:
       "The vault under the gatehouse holds every letter of passage ever issued. The clerk who files them cannot read.",
@@ -70,7 +70,7 @@ export const DUNGEONS = [
     difficulty: 3,
     reward: 700,
     hours: "1 hour 10",
-    state: "open",
+    state: "digging",
     depth: 4,
     gloss:
       "Every door in the cellars carries a number. The keeper checks the number against a list. There is no second list.",
@@ -93,12 +93,12 @@ export const DUNGEONS = [
     difficulty: 4,
     reward: 1100,
     hours: "1 hour 30",
-    state: "sealed",
+    state: "digging",
     depth: 5,
     gloss:
       "The keep's messenger will fetch any scroll you name. The well at the centre of the courtyard answers only to those inside the walls.",
-    entrance: "Sealed. Swear the guild oath to descend.",
-    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Sealed.", craft: "Sealed" })),
+    entrance: "Still being dug. Its chambers are being surveyed for the next edition of the codex.",
+    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Still being surveyed.", craft: "" })),
   },
   {
     slug: "counting-house",
@@ -109,12 +109,12 @@ export const DUNGEONS = [
     difficulty: 5,
     reward: 1500,
     hours: "2 hours",
-    state: "sealed",
+    state: "digging",
     depth: 4,
     gloss:
       "Three clerks, one ledger, and a rite for handling coin that was written when there was only ever one customer at the counter.",
-    entrance: "Sealed. Swear the guild oath to enter.",
-    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Sealed.", craft: "Sealed" })),
+    entrance: "Still being dug. Its chambers are being surveyed for the next edition of the codex.",
+    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Still being surveyed.", craft: "" })),
   },
   {
     slug: "forbidden-dungeon",
@@ -125,12 +125,12 @@ export const DUNGEONS = [
     difficulty: 5,
     reward: 2000,
     hours: "3 hours",
-    state: "sealed",
+    state: "digging",
     depth: 5,
     gloss:
       "No single flaw down here is worth reporting alone. That is the whole lesson, and it is why the door is barred to novices.",
-    entrance: "Sealed. Swear the guild oath, and come back at Warden.",
-    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Sealed.", craft: "Sealed" })),
+    entrance: "Still being dug. Its chambers are being surveyed for the next edition of the codex.",
+    chambers: CHAMBER_ORDER.map((c) => ({ no: c.no, done: false, task: "Still being surveyed.", craft: "" })),
   },
 ];
 

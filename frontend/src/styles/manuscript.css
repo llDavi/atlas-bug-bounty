@@ -128,6 +128,10 @@ html { background: var(--desk-dark); }
 
 .codex {
   min-height: 100vh;
+  /* a column, so the colophon always sits at the foot of the page even
+     when a folio is short */
+  display: flex;
+  flex-direction: column;
   background-color: var(--paper);
   color: var(--ink);
   font-family: var(--face-body);
@@ -214,6 +218,82 @@ html { background: var(--desk-dark); }
 }
 /* a slip that carries the live thing gets a rubric edge, like a wax tab */
 .slip--marked { border-left: 3px solid var(--rubric); }
+
+/* the nine classes, set as a ruled manuscript table (3 × 3) */
+.class-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background-color: var(--rule-soft);
+  border: 1px solid var(--rule-soft);
+}
+@media (max-width: 900px) { .class-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .class-grid { grid-template-columns: minmax(0, 1fr); } }
+.class-cell { background-color: var(--paper); padding: 1.3rem 1.4rem; }
+.class-cell.is-mine { background-color: var(--paper-aged); box-shadow: inset 3px 0 0 var(--rubric); }
+
+/* a kingdom's head on the quest index: an open rubric, its colour a rule
+   beneath — no box, so it sits on the page like the rest of the codex */
+.kingdom-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 2px solid var(--accent, var(--rule-strong));
+}
+.kingdom-banner .banner-mark {
+  display: grid;
+  place-items: center;
+  width: 2.7rem; height: 2.7rem;
+  border-radius: 50%;
+  color: #fff;
+  background-color: var(--accent, var(--ink-strong));
+  flex-shrink: 0;
+}
+
+/* the quest index as an open book: the lessons on the left leaf, the trials
+   on the right, only a fold down the middle — no frames, no panels */
+.spread-book {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.spread-page { min-width: 0; }
+.spread-page--left { padding-right: 2.4rem; border-right: 1px solid var(--rule); }
+.spread-page--right { padding-left: 2.4rem; }
+@media (max-width: 820px) {
+  .spread-book { grid-template-columns: 1fr; }
+  .spread-page--left { border-right: 0; padding-right: 0; padding-bottom: 1.6rem; margin-bottom: 1.6rem; border-bottom: 1px solid var(--rule); }
+  .spread-page--right { padding-left: 0; }
+}
+.spread-rubric {
+  font-family: var(--face-caps);
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.72rem;
+  color: var(--rubric);
+}
+
+/* one lesson line: a hanging rubricated number, the title, a dotted leader */
+.lesson {
+  display: grid;
+  grid-template-columns: 2.2rem 1fr auto;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  padding: 0.62rem 0;
+  border-bottom: 1px solid var(--rule-hair, var(--rule-soft));
+}
+.lesson:last-child { border-bottom: 0; }
+.lesson-no { font-family: var(--face-roman); font-size: 0.82rem; color: var(--ink-faint); }
+.lesson-title { font-family: var(--face-title); font-size: 1.02rem; color: var(--ink-strong); }
+.lesson--unwritten .lesson-title,
+.lesson--unwritten .lesson-no { color: var(--ink-faint); }
+.lesson a.lesson-title:hover { color: var(--rubric); }
+.lesson-note { font-family: var(--face-caps); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.64rem; white-space: nowrap; }
+
+/* one trial (dungeon) on the right leaf */
+.trial { display: flex; gap: 0.9rem; padding: 1rem 0; border-bottom: 1px solid var(--rule-soft); }
+.trial:last-child { border-bottom: 0; }
+.trial-mark { color: var(--ink-soft); flex-shrink: 0; margin-top: 0.15rem; }
 
 /* board / stone */
 .plate {
@@ -787,3 +867,57 @@ html { background: var(--desk-dark); }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }
 }
+
+/* --------------------------------------------------------------- choices
+   A selectable cell on the register: a small sheet you put your finger on.
+   Picked means a rubric frame and a wash — never a glow. */
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr));
+  gap: 0.9rem;
+}
+.choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background-color: var(--paper);
+  border: 1px solid var(--rule-soft);
+  padding: 1.1rem 1.2rem;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 0.12s linear, background-color 0.12s linear;
+}
+.choice:hover { border-color: var(--rule-strong); }
+.choice:focus-visible { outline: 2px solid var(--rubric); outline-offset: 2px; }
+.choice.is-picked {
+  border-color: var(--rubric);
+  box-shadow: inset 3px 0 0 var(--rubric);
+  background-color: var(--wash-rubric);
+}
+
+.oath-check {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--rubric);
+}
+
+/* ------------------------------------------------------------ questions
+   A question set into the lesson: a pasted-in slip with a ruled edge that
+   turns verdigris when answered and rubric when an answer is refused. */
+
+.qbox {
+  background-color: var(--paper-aged);
+  border: 1px solid var(--rule-soft);
+  border-left: 3px solid var(--ink-soft);
+  padding: 1.5rem 1.6rem;
+  margin: 2.4rem 0 2.8rem;
+  max-width: 68ch;
+}
+.qbox--right { border-left-color: var(--verdigris); }
+.qbox--wrong { border-left-color: var(--rubric); }
+
+.quest-body > .typed { max-width: 68ch; }
+
+/* the folio itself takes whatever height is left above the colophon */
+.codex-main { flex: 1 0 auto; width: 100%; }

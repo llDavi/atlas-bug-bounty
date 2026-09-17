@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { PLACES, ROADS, REALM, STATE_NOTE, placeById } from "../../data/world";
-import { QUESTS } from "../../data/journal";
+import { PLACES, ROADS, REALM, STATE_NOTE } from "../../data/world";
 import { dungeonsAtPlace } from "../../data/dungeons";
 import { Stamp, Fleuron, Mark } from "./Codex";
 import { roman } from "../../utils/numerals";
@@ -30,7 +29,7 @@ function hand(seed) {
 /* ------------------------------------------------------------- terrain */
 
 /* A range of peaks, hatched on the eastern flank as an engraver would. */
-function Range({ x, y, count = 5, scale = 1, seed = 1 }) {
+export function Range({ x, y, count = 5, scale = 1, seed = 1 }) {
   const j = hand(seed);
   const peaks = Array.from({ length: count }, (_, i) => {
     const w = (26 + j(6)) * scale;
@@ -75,7 +74,7 @@ function Tree({ x, y, s = 1 }) {
   );
 }
 
-function Wood({ x, y, w, h, n = 9, seed = 3, s = 1 }) {
+export function Wood({ x, y, w, h, n = 9, seed = 3, s = 1 }) {
   const j = hand(seed);
   return (
     <g>
@@ -87,7 +86,7 @@ function Wood({ x, y, w, h, n = 9, seed = 3, s = 1 }) {
 }
 
 /* Reeds and standing water. */
-function Reeds({ x, y, n = 7, seed = 5 }) {
+export function Reeds({ x, y, n = 7, seed = 5 }) {
   const j = hand(seed);
   return (
     <g>
@@ -107,7 +106,7 @@ function Reeds({ x, y, n = 7, seed = 5 }) {
 
 /* ------------------------------------------------------- place glyphs */
 
-const GLYPH = {
+export const GLYPH = {
   village: ({ x, y }) => (
     <g>
       {[[-17, 2, 1], [2, 0, 1.18], [20, 4, 0.9]].map(([dx, dy, s], i) => (
@@ -214,7 +213,7 @@ const GLYPH = {
 
 /* ------------------------------------------------------------- fittings */
 
-function CompassRose({ x, y, r = 46 }) {
+export function CompassRose({ x, y, r = 46 }) {
   return (
     <g>
       <circle className="mk-frame" cx={x} cy={y} r={r} />
@@ -242,15 +241,17 @@ function CompassRose({ x, y, r = 46 }) {
 function Cartouche() {
   return (
     <g>
-      <path className="mk-frame mk-fill-paper" d="M 30 24 h 320 l 14 14 v 52 l -14 14 H 44 L 30 90 Z" />
-      <path className="mk-hachure" d="M 37 31 h 306 l 9 9 v 40 l -9 9 H 48 l -11 -9 Z" />
-      <text className="map-cartouche-title" x="52" y="60">{REALM.title}</text>
-      <text className="map-cartouche-sub" x="52" y="80">{REALM.survey}</text>
+      <path className="mk-frame mk-fill-paper" d="M 30 24 h 320 l 14 14 v 64 l -14 14 H 44 L 30 102 Z" />
+      <path className="mk-hachure" d="M 37 31 h 306 l 9 9 v 52 l -9 9 H 48 l -11 -9 Z" />
+      <text className="map-cartouche-title" x="52" y="58">{REALM.title}</text>
+      {REALM.surveyLines.map((line, i) => (
+        <text key={line} className="map-cartouche-sub" x="52" y={80 + i * 16}>{line}</text>
+      ))}
     </g>
   );
 }
 
-function ScaleBar({ x, y }) {
+export function ScaleBar({ x, y }) {
   return (
     <g>
       <text className="map-scale-text" x={x} y={y - 8}>Leagues of the hunt</text>
@@ -273,7 +274,7 @@ function ScaleBar({ x, y }) {
 }
 
 /* A sea beast, because the engraver had room left over. */
-function Serpent({ x, y }) {
+export function Serpent({ x, y }) {
   return (
     <g opacity="0.7">
       <path className="mk-water" d={`M ${x - 46} ${y} q 12 -16 24 0 q 12 16 24 0 q 12 -16 24 0`} />
@@ -285,7 +286,7 @@ function Serpent({ x, y }) {
 
 /* ---------------------------------------------------------------- roads */
 
-function roadPath(a, b, kind, seed) {
+export function roadPath(a, b, kind, seed) {
   const j = hand(seed);
   const mx = (a.x + b.x) / 2 + j(28);
   const my = (a.y + b.y) / 2 + j(28);
@@ -300,7 +301,7 @@ function roadPath(a, b, kind, seed) {
 
 function PlaceLabel({ p }) {
   const off = { above: -46, below: 30, left: 0, right: 0 };
-  let x = p.x;
+  let x = p.x + (p.labelDx || 0);
   let y = p.y + (off[p.label] ?? 30);
   let anchor = "middle";
   if (p.label === "left") { x = p.x - 34; y = p.y - 4; anchor = "end"; }
@@ -320,11 +321,14 @@ function PlaceLabel({ p }) {
 
 /* ------------------------------------------------------------ the sheet */
 
-export default function WorldMap({ initial = null }) {
+/* `places` carry the state derived from the hunter's progress (see
+   data/progress.js); `questsByPlace` are the quests the register has written
+   at each place. Both default to the bare survey for callers without them. */
+export default function WorldMap({ initial = null, places = PLACES, questsByPlace = {} }) {
   const [chosenId, setChosenId] = useState(initial);
-  const chosen = chosenId ? placeById(chosenId) : null;
+  const chosen = chosenId ? places.find((p) => p.id === chosenId) : null;
 
-  const byId = useMemo(() => Object.fromEntries(PLACES.map((p) => [p.id, p])), []);
+  const byId = useMemo(() => Object.fromEntries(places.map((p) => [p.id, p])), [places]);
 
   return (
     <div className="survey-layout">
@@ -341,13 +345,13 @@ export default function WorldMap({ initial = null }) {
                 opacity={0.8 - i * 0.15}
               />
             ))}
-            <text className="map-sea-name" x="0" y="0" transform="translate(958 430) rotate(80)" textAnchor="middle">
+            <text className="map-sea-name" x="0" y="0" transform="translate(945 520) rotate(80)" textAnchor="middle">
               The Sundering Sea
             </text>
-            <text className="map-warning" x="0" y="0" transform="translate(940 200) rotate(72)" textAnchor="middle">
+            <text className="map-warning" x="0" y="0" transform="translate(946 185) rotate(72)" textAnchor="middle">
               Hic sunt dracones
             </text>
-            <Serpent x={928} y={600} />
+            <Serpent x={905} y={735} />
 
             {/* ---- ranges ---- */}
             <Range x={70} y={152} count={5} scale={1.1} seed={2} />
@@ -382,7 +386,7 @@ export default function WorldMap({ initial = null }) {
             })}
 
             {/* ---- the settlements themselves ---- */}
-            {PLACES.map((p) => {
+            {places.map((p) => {
               const Glyph = GLYPH[p.kind] || GLYPH.village;
               return (
                 <g
@@ -399,7 +403,8 @@ export default function WorldMap({ initial = null }) {
                     }
                   }}
                 >
-                  <circle className="place-halo" cx={p.x} cy={p.y - 12} r="42" />
+                  {/* a generous invisible target, so a place is clicked, not aimed at */}
+                  <circle className="place-halo" cx={p.x} cy={p.y - 12} r="52" />
                   <Glyph x={p.x} y={p.y} />
                   {p.state === "current" && (
                     <path
@@ -422,7 +427,7 @@ export default function WorldMap({ initial = null }) {
             <text className="map-hand" x="120" y="576" transform="rotate(-4 120 576)">
               start here — the road is safe
             </text>
-            <text className="map-hand" x="470" y="268" transform="rotate(3 470 268)">
+            <text className="map-hand" x="452" y="268" transform="rotate(3 452 268)">
               two hunters lost, 2024
             </text>
             <text className="map-hand" x="612" y="424" transform="rotate(-2 612 424)">
@@ -442,7 +447,7 @@ export default function WorldMap({ initial = null }) {
 
       {/* ------------------------------------------- the reading, in the margin */}
       <aside>
-        {chosen ? <PlaceReading p={chosen} onClose={() => setChosenId(null)} /> : <SurveyLegend />}
+        {chosen ? <PlaceReading p={chosen} quests={questsByPlace[chosen.id] || []} onClose={() => setChosenId(null)} /> : <SurveyLegend />}
       </aside>
     </div>
   );
@@ -450,10 +455,11 @@ export default function WorldMap({ initial = null }) {
 
 /* ------------------------------------------------------------- readings */
 
-function PlaceReading({ p, onClose }) {
-  const quests = QUESTS.filter((q) => q.place === p.id);
+function PlaceReading({ p, quests, onClose }) {
   const dungeons = dungeonsAtPlace(p.id);
-  const barred = p.state === "sealed" || p.state === "unknown";
+  const sealed = p.state === "sealed";
+  const offSurvey = p.state === "unknown";
+  const barred = sealed || offSurvey;
 
   return (
     <div className="leaf leaf--lit quire" style={{ padding: "1.8rem 1.9rem" }}>
@@ -485,22 +491,26 @@ function PlaceReading({ p, onClose }) {
       <hr className="rule rule--tight" />
 
       <div className="flex flex-wrap gap-2 items-center">
-        <Stamp tone={barred ? "faint" : ""}>{quests.length || p.quests} quests</Stamp>
+        <Stamp tone={barred || !quests.length ? "faint" : ""}>
+          {quests.length ? `${quests.length} ${quests.length === 1 ? "quest" : "quests"} written` : "No quest written yet"}
+        </Stamp>
         {dungeons.map((d) => (
-          <Stamp key={d.slug} tone={d.state === "sealed" ? "faint" : "rubric"}>
-            {d.state === "sealed" ? "Dungeon sealed" : "Dungeon open"}
-          </Stamp>
+          <Stamp key={d.slug} tone="faint">Dungeon being dug</Stamp>
         ))}
       </div>
 
       <div className="flex flex-col gap-3 mt-6">
-        {barred ? (
+        {sealed ? (
           <Link to="/oath" className="ink-btn ink-btn--rubric">Swear the oath</Link>
-        ) : (
+        ) : offSurvey ? (
+          <p className="t-small">No road reaches it yet. Walk the ground next to it first.</p>
+        ) : quests.length ? (
           <Link to={`/quests?place=${p.id}`} className="ink-btn ink-btn--filled">Read the quests</Link>
+        ) : (
+          <p className="t-small">Its quests are still being copied into the journal.</p>
         )}
         {dungeons[0] && !barred && (
-          <Link to={`/dungeons/${dungeons[0].slug}`} className="ink-btn">Enter {dungeons[0].name}</Link>
+          <Link to={`/dungeons/${dungeons[0].slug}`} className="ink-btn">The plan of {dungeons[0].name}</Link>
         )}
       </div>
     </div>
@@ -521,7 +531,6 @@ function SurveyLegend() {
     ["Walked and written up", "charted"],
     ["Where you stand", "current"],
     ["Heard of, not walked", "rumoured"],
-    ["Barred by the guild", "sealed"],
     ["Off the survey", "unknown"],
   ];
   return (

@@ -7,15 +7,18 @@ import stripe
 
 from sources.aggregator import get_programs as fetch_programs
 from sources.walkthroughs import get_list as fetch_walkthroughs, get_detail as fetch_walkthrough
-from sources.auth import require_pro, require_auth, require_admin
+from sources.auth import require_pro, require_auth, require_admin, optional_auth
 from sources.db import init_db
-from sources import submissions, billing, ratelimit
+from sources import submissions, billing, ratelimit, store, hunters, quests
+from sources.realm import KINGDOMS
 from sources.config import ALLOWED_ORIGINS
 
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 app = FastAPI(title="Bounty Radar API")
 init_db()
+store.init_schema()
+quests.validate()  # malformed quest content fails the boot, not a hunter
 
 app.add_middleware(
     CORSMiddleware,
@@ -127,3 +130,129 @@ async def post_billing_webhook(request: Request):
         raise HTTPException(status_code=400, detail=str(exc))
     billing.handle_event(event)
     return {"received": True}
+
+
+# ---------------------------------------------------------------- hunters
+
+
+class RegisterRequest(BaseModel):
+    name: str = Field(min_length=2, max_length=40)
+    alignment: str = Field(max_length=40)
+    kingdoms: list[str] = Field(min_length=1, max_length=len(KINGDOMS))
+    oath: bool
+
+
+class HunterUpdate(BaseModel):
+    name: str | None = Field(None, min_length=2, max_length=40)
+    alignment: str | None = Field(None, max_length=40)
+    kingdoms: list[str] | None = Field(None, min_length=1, max_length=len(KINGDOMS))
+
+
+class AnswerRequest(BaseModel):
+    question_id: str = Field(max_length=80)
+    answer: str = Field(max_length=500)
+
+
+@app.get("/api/hunter/me")
+def get_hunter_me(user=Depends(require_auth)):
+    hunter = hunters.get_hunter(user["sub"])
+    if not hunter:
+        raise HTTPException(status_code=404, detail="Not registered")
+    return hunter
+
+
+@app.post("/api/hunter/register", status_code=201)
+def post_hunter_register(body: RegisterRequest, user=Depends(require_auth)):
+    ratelimit.check(f"register:{user['sub']}", max_requests=10, window_seconds=3600)
+    if not body.oath:
+        raise HTTPException(status_code=400, detail="The oath must be sworn to sign the register")
+    try:
+        return hunters.register(user["sub"], body.name, body.alignment, body.kingdoms)
+    except hunters.AlreadyRegistered:
+        raise HTTPException(status_code=409, detail="Already registered")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@app.patch("/api/hunter/me")
+def patch_hunter_me(body: HunterUpdate, user=Depends(require_auth)):
+    try:
+        hunter = hunters.update(user["sub"], name=body.name, alignment=body.alignment, kingdoms=body.kingdoms)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    if not hunter:
+        raise HTTPException(status_code=404, detail="Not registered")
+    return hunter
+
+
+# ---------------------------------------------------------------- quests
+
+
+# Anyone may read the quest list — names, places, rewards. Only a signed-in
+# hunter may open a lesson or answer it.
+
+
+@app.get("/api/quests")
+def get_quest_list(kingdom: str | None = None, user=Depends(optional_auth)):
+    if not user:
+        return quests.list_public(kingdom)
+    clerk_id = user["sub"]
+    return quests.list_public(kingdom, hunters.completed_slugs(clerk_id), hunters.answered_counts(clerk_id))
+
+
+@app.get("/api/quests/{slug}")
+def get_quest_detail(slug: str, user=Depends(require_auth)):
+    clerk_id = user["sub"]
+    quest = quests.get_public(slug, hunters.completed_slugs(clerk_id), hunters.answered_ids(clerk_id, slug))
+    if not quest:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    return quest
+
+
+@app.post("/api/quests/{slug}/answer")
+def post_quest_answer(slug: str, body: AnswerRequest, user=Depends(require_auth)):
+    clerk_id = user["sub"]
+    ratelimit.check(f"answer:{clerk_id}", max_requests=120, window_seconds=600)
+    if not hunters.is_registered(clerk_id):
+        raise HTTPException(status_code=403, detail="Sign the register first")
+    meta = quests.meta(slug)
+    if not meta:
+        raise HTTPException(status_code=404, detail="Quest not found")
+    if not quests.is_unlocked(slug, hunters.completed_slugs(clerk_id)):
+        raise HTTPException(status_code=403, detail="This quest is still locked")
+
+    correct = quests.check(slug, body.question_id, body.answer)
+    if correct is None:
+        raise HTTPException(status_code=404, detail="Question not found")
+    if correct:
+        hunters.record_correct_answer(clerk_id, slug, body.question_id)
+
+    answered = hunters.answered_ids(clerk_id, slug)
+    finished = set(quests.question_ids(slug)) <= answered
+    xp_awarded = meta["xp"] if finished and hunters.complete_quest(clerk_id, slug, meta["kingdom"], meta["xp"]) else 0
+    return {
+        "correct": correct,
+        "answered": sorted(answered),
+        "completed": finished,
+        "xp_awarded": xp_awarded,
+        "xp_total": hunters.total_xp(clerk_id),
+    }
+
+
+# ---------------------------------------------------------------- the roll
+
+
+@app.get("/api/roll", dependencies=[Depends(ratelimit.by_ip(120, 60))])
+def get_roll(kingdom: str | None = None, user=Depends(optional_auth)):
+    """Public standing. Only the register name, alignment and record are
+    shown — never the account behind them."""
+    try:
+        rows = hunters.roll(kingdom)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    me = user["sub"] if user else None
+    return [
+        {"place": place, "name": r["name"], "alignment": r["alignment"], "xp": r["xp"],
+         "quests": r["quests"], "is_you": r["clerk_id"] == me}
+        for place, r in enumerate(rows, start=1)
+    ]

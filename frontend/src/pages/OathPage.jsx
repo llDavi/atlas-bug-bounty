@@ -10,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
    THE GUILD OATH — a charter, sworn and sealed
    ========================================================================== */
 
+/* Only what the oath really opens today. */
 const GRANTS = [
   {
     mark: "tome",
@@ -17,19 +18,9 @@ const GRANTS = [
     text: "The whole survey, the turn, the chain, the proof and the filed account of every hunt in the archive.",
   },
   {
-    mark: "hydra",
-    title: "The sealed plates of the bestiary",
-    text: "The marsh hydra, the hollow crown and the bound worm — their spoor and their wards, written out in full.",
-  },
-  {
-    mark: "lantern",
-    title: "The barred ground",
-    text: "The marshes, the counting house, the well of Stonewatch and the dungeon beneath the mountains.",
-  },
-  {
     mark: "raven",
     title: "Word from the registry",
-    text: "Hunters already on the ground, reports resolved, how fast a keeper answers, and word when a scope widens.",
+    text: "Hunters already on the ground, reports resolved, how fast a keeper answers, and whether there is a wall before the walls.",
   },
 ];
 
@@ -74,8 +65,8 @@ export default function OathPage() {
           <h1 className="t-title text-4xl mt-5 mb-2">You are sworn to the guild.</h1>
           <Fleuron width={170} className="ornament--center" />
           <p className="column mx-auto">
-            Every seal in this book is broken for you: the sealed folios of the archive, the
-            barred plates of the bestiary, and the four grounds nobody walks unsworn.
+            The full account of every field journal in the archive is open to you, and the
+            registry keeps its intelligence for you too.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">
             <Link to="/journals" className="ink-btn ink-btn--filled">Open the archive</Link>
@@ -155,7 +146,6 @@ export default function OathPage() {
           <p className="t-soft mb-4">the month · leave at any month&rsquo;s end</p>
           <div className="flex flex-col gap-1 mb-5">
             <Leader label="Archive unsealed" value="Yes" />
-            <Leader label="Barred ground" value="Yes" />
             <Leader label="Registry word" value="Yes" />
             <Leader label="Bound for" value="One month" />
           </div>
@@ -181,7 +171,6 @@ export default function OathPage() {
           </div>
           <div className="flex flex-col gap-1 mb-5">
             <Leader label="Archive unsealed" value="Yes" />
-            <Leader label="Barred ground" value="Yes" />
             <Leader label="Registry word" value="Yes" />
             <Leader label="Bound for" value="One year" />
           </div>
@@ -212,7 +201,7 @@ export default function OathPage() {
       <div className="flex flex-col items-center mt-12">
         <Fleuron width={150} />
         <p className="t-caps mt-3 flex items-center gap-2">
-          <CheckMark size={14} /> The survey, the quest journal and the first plates stay free
+          <CheckMark size={14} /> Signing the register is free: the quests, the bestiary and the roll stay free
         </p>
       </div>
     </>

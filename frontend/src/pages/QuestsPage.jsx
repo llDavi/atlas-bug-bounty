@@ -1,155 +1,132 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { PageHead, Stamp, Stars, Mark, Fleuron } from "../components/ms/Codex";
+import { useAuth } from "@clerk/clerk-react";
+import { PageHead, Stars, Fleuron, Mark } from "../components/ms/Codex";
 import { roman } from "../utils/numerals";
-import { QUESTS, DIFFICULTY_WORD } from "../data/journal";
+import { api } from "../api";
+import { useHunter } from "../hunter-context";
+import { KINGDOMS, kingdomById } from "../data/realm";
+import { chaptersOf } from "../data/chapters";
 import { placeById } from "../data/world";
-import { dungeonsAtPlace } from "../data/dungeons";
+import { DUNGEONS } from "../data/dungeons";
 
 /* ==========================================================================
-   THE QUEST JOURNAL
+   THE QUEST JOURNAL — an open book, kingdom by kingdom
    ==========================================================================
-   Not courses, and not cards. Each quest is an entry written on the page,
-   ruled off from the one before it, in the order it was taken down.
+   Each kingdom is a spread: on the left leaf THE LESSONS (its quests, where
+   you read and answer and learn where to look), on the right leaf THE TRIALS
+   (its dungeons, where you go in and do the work for real). Every place on
+   the kingdom's map is a lesson; a trial is dug at a place when the guild has
+   cut one. The two leaves are bound by a fold down the middle.
    ========================================================================== */
 
-const STATES = {
-  completed: { label: "Discharged", tone: "green" },
-  "in-progress": { label: "In hand", tone: "rubric" },
-  available: { label: "Unclaimed", tone: "" },
-  sealed: { label: "Sealed", tone: "faint" },
+/* A muted ink colour per kingdom, on the binding of each spread. */
+const ACCENT = {
+  web: "#3f5a7a",
+  api: "#7a5a30",
+  mobile: "#3d6b63",
+  "smart-contracts": "#6b3f5c",
+  networks: "#55606e",
 };
 
-const FILTERS = [
-  ["all", "Every quest"],
-  ["available", "Unclaimed"],
-  ["in-progress", "In hand"],
-  ["completed", "Discharged"],
-  ["sealed", "Sealed"],
-];
+const QUEST_NOTE = {
+  completed: { label: "discharged", color: "var(--verdigris)" },
+  available: { label: "open · begin", color: "var(--rubric)" },
+  locked: { label: "further on", color: "var(--ink-faint)" },
+};
 
-function QuestEntry({ q }) {
-  const st = STATES[q.state];
-  const place = placeById(q.place);
-  const sealed = q.state === "sealed";
-  const dungeon = dungeonsAtPlace(q.place)[0];
-
+/* One lesson line: rubricated number, title, and a note on its standing. */
+function Lesson({ chapter, number, quest }) {
+  const written = Boolean(quest);
+  const note = quest ? QUEST_NOTE[quest.status] || QUEST_NOTE.available : null;
   return (
-    <article id={`quest-${q.no}`} className={`entry ${sealed ? "entry--obscured" : ""}`}>
-      <div className="spread">
-        <div>
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <p className="t-roman text-[0.78rem]">Quest {roman(q.no)}</p>
-            <Stamp tone={st.tone} pressed={q.state === "completed"}>{st.label}</Stamp>
-            {place && (
-              <Link to={`/quests?place=${place.id}`} className="t-caps">
-                {place.name}
-              </Link>
-            )}
-          </div>
+    <div className={`lesson ${written ? "" : "lesson--unwritten"}`}>
+      <span className="lesson-no">{roman(number)}</span>
+      {written ? (
+        <Link to={`/quests/${quest.slug}`} className="lesson-title">{chapter.title}</Link>
+      ) : (
+        <span className="lesson-title">{chapter.title}</span>
+      )}
+      {written ? (
+        <span className="lesson-note" style={{ color: note.color }}>
+          {quest.xp} XP · {note.label}
+        </span>
+      ) : (
+        <span className="lesson-note" style={{ color: "var(--ink-faint)" }}>being written</span>
+      )}
+    </div>
+  );
+}
 
-          <h2 className="t-title text-3xl sm:text-4xl mt-2 mb-3">{q.title}</h2>
-
-          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2 mb-4">
-            <span>
-              <span className="t-caps block mb-0.5">Difficulty</span>
-              <Stars value={q.difficulty} />
-              <span className="block t-caps">{DIFFICULTY_WORD[q.difficulty]}</span>
-            </span>
-            <span>
-              <span className="t-caps block mb-0.5">Reward</span>
-              <span className="t-roman text-[0.95rem]">{q.reward} XP</span>
-            </span>
-            <span>
-              <span className="t-caps block mb-0.5">Reckoned at</span>
-              <span className="text-[0.95rem]">{q.hours}</span>
-            </span>
-            {q.beast !== "—" && (
-              <span>
-                <span className="t-caps block mb-0.5">Beast</span>
-                <Link to="/bestiary" className="ink-link text-[0.95rem]">{q.beast}</Link>
-              </span>
-            )}
-          </div>
-
-          <p className="t-caps mb-1.5">Objective</p>
-          <p className="text-[1.08rem] column-wide mb-5">
-            {sealed ? "The wording of this quest is kept from the unsworn." : q.objective}
-          </p>
-
-          {!sealed && (
-            <>
-              <p className="t-caps mb-2">The work, in order</p>
-              <ol className="flex flex-col gap-1.5 mb-5">
-                {q.steps.map((s, i) => (
-                  <li key={s} className="flex gap-3 items-baseline">
-                    <span
-                      className="t-roman text-[0.7rem]"
-                      style={{ minWidth: "2.2rem", color: i < q.done ? "var(--verdigris)" : "var(--ink-faint)" }}
-                    >
-                      {roman(i + 1)}
-                    </span>
-                    <span className={i < q.done ? "struck" : ""}>{s}</span>
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
-
-          <div className="flex flex-wrap items-center gap-3">
-            {sealed ? (
-              <Link to="/oath" className="ink-btn ink-btn--rubric">Break the seal</Link>
-            ) : q.state === "completed" ? (
-              <Link to="/journals" className="ink-btn">Read the account again</Link>
-            ) : (
-              <Link to={dungeon ? `/dungeons/${dungeon.slug}` : "/dungeons"} className="ink-btn ink-btn--filled">
-                {q.state === "in-progress" ? "Take up the work" : "Accept the quest"}
-              </Link>
-            )}
-            {q.done > 0 && q.done < q.steps.length && (
-              <span className="t-caps">
-                {roman(q.done)} of {roman(q.steps.length)} steps struck through
-              </span>
-            )}
-          </div>
+/* One trial (dungeon) on the right leaf. */
+function Trial({ dungeon }) {
+  return (
+    <div className="trial">
+      <span className="trial-mark"><Mark name="chain" size={22} /></span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <h4 className="t-entry" style={{ fontSize: "1.05rem" }}>
+          <Link to={`/dungeons/${dungeon.slug}`}>{dungeon.name}</Link>
+        </h4>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1 mt-2">
+          <Stars value={dungeon.difficulty} />
+          <span className="t-figure">{dungeon.reward} XP</span>
+          <span className="t-caps" style={{ color: "var(--ink-faint)" }}>still being dug</span>
         </div>
-
-        <aside>
-          <div className="slip">
-            <p className="t-caps mb-2">As it was told</p>
-            <p className="text-[0.95rem]" style={{ fontStyle: "italic" }}>&ldquo;{q.gloss}&rdquo;</p>
-            <div className="flex justify-end mt-3" style={{ color: "var(--ink-faint)" }}>
-              <Mark name={sealed ? "chain" : "quill"} size={24} />
-            </div>
-          </div>
-          {q.state === "in-progress" && (
-            <p className="margin-note margin-note--right mt-4">
-              two steps struck through — the third is the hard one
-            </p>
-          )}
-        </aside>
       </div>
-    </article>
+    </div>
   );
 }
 
 export default function QuestsPage() {
+  const { getToken, isSignedIn, isLoaded } = useAuth();
+  const { hunter } = useHunter();
   const [params, setParams] = useSearchParams();
-  const placeId = params.get("place");
-  const [state, setState] = useState("all");
+  const placeFilter = params.get("place");
+  const [quests, setQuests] = useState(null);
+  const [error, setError] = useState(null);
+  const done = hunter?.completed_quests?.length ?? 0;
 
-  const shown = useMemo(
-    () =>
-      QUESTS.filter((q) => {
-        if (placeId && q.place !== placeId) return false;
-        if (state !== "all" && q.state !== state) return false;
-        return true;
-      }),
-    [placeId, state]
-  );
+  useEffect(() => {
+    if (!isLoaded) return;
+    let dropped = false;
+    api("/api/quests", { getToken: isSignedIn ? getToken : undefined })
+      .then((list) => {
+        if (!dropped) setQuests(list);
+      })
+      .catch((err) => {
+        if (!dropped) setError(err.message);
+      });
+    return () => {
+      dropped = true;
+    };
+  }, [isLoaded, isSignedIn, getToken, done]);
 
-  const place = placeId ? placeById(placeId) : null;
-  const tally = QUESTS.reduce((acc, q) => ({ ...acc, [q.state]: (acc[q.state] || 0) + 1 }), {});
+  const writtenByKey = useMemo(() => {
+    const m = {};
+    for (const q of quests || []) if (q.place) m[`${q.kingdom}:${q.place}`] = q;
+    return m;
+  }, [quests]);
+
+  const groups = useMemo(() => {
+    const followed = hunter?.kingdoms ?? [];
+    const order = [...followed, ...KINGDOMS.map((k) => k.id).filter((k) => !followed.includes(k))];
+    return order
+      .map((id) => {
+        const kingdom = kingdomById(id);
+        let chapters = chaptersOf(id).map((c, i) => ({ chapter: c, number: i + 1 }));
+        // Every current dungeon sits at a Web Realm place.
+        let dungeons = (id === "web" ? DUNGEONS : []);
+        if (placeFilter) {
+          chapters = chapters.filter((e) => e.chapter.place === placeFilter);
+          dungeons = dungeons.filter((d) => d.place === placeFilter);
+        }
+        return { kingdom, chapters, dungeons };
+      })
+      .filter((g) => g.chapters.length);
+  }, [hunter, placeFilter]);
+
+  const place = placeFilter ? placeById(placeFilter) : null;
+  const loading = !quests && !error;
 
   return (
     <>
@@ -157,61 +134,101 @@ export default function QuestsPage() {
         folio={2}
         standing="The second folio"
         title="The Quest Journal"
-        gloss="Every quest was written down as it was taken, and struck through as it was discharged. The wording never says where the flaw is: a real programme does not say either."
-        hand={`${tally.available || 0} unclaimed · ${tally["in-progress"] || 0} in hand · ${tally.sealed || 0} sealed`}
+        gloss="Every kingdom is a spread of two leaves: the lessons, where you read and answer and learn where to look, and the trials, where you go in and do the work for real. One leaf teaches; the other proves."
       />
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-2">
-        {FILTERS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setState(key)}
-            className={`t-caps ${state === key ? "" : ""}`}
-            style={{
-              color: state === key ? "var(--rubric)" : "var(--ink-soft)",
-              borderBottom: state === key ? "1px solid var(--rubric)" : "1px solid transparent",
-              paddingBottom: "2px",
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {place && (
-        <p className="mt-4 mb-2 flex items-center gap-3 flex-wrap">
-          <span className="t-caps">Quests written at</span>
-          <span className="t-title text-xl">{place.name}</span>
+        <p className="mb-8 flex items-center gap-4 flex-wrap">
+          <span className="t-caps">The chapter at</span>
+          <span className="t-entry">{place.name}</span>
           <button type="button" onClick={() => setParams({})} className="t-caps" style={{ color: "var(--rubric)" }}>
-            Show the whole realm
+            Show every kingdom
           </button>
         </p>
       )}
 
-      <hr className="rule" />
-
-      {shown.length === 0 ? (
-        <div className="leaf leaf--lit" style={{ padding: "2rem" }}>
-          <p className="t-title text-xl mb-2">Nothing of that kind is entered here.</p>
-          <p className="t-soft">The keeper suggests you try another ground, or another standing.</p>
-        </div>
-      ) : (
-        <div className="flex flex-col">
-          {shown.map((q) => (
-            <QuestEntry key={q.slug} q={q} />
-          ))}
+      {error && (
+        <div className="leaf" style={{ padding: "2.4rem" }}>
+          <p className="t-eyebrow">The journal is shut</p>
+          <p className="t-entry mt-3">The register did not answer.</p>
+          <pre className="typed mt-5">{error}</pre>
         </div>
       )}
 
-      <div className="flex flex-col items-center mt-12">
-        <Fleuron width={160} />
-        <p className="t-caps mt-3">Here the quest journal ends</p>
-        <div className="flex flex-wrap gap-3 mt-4 justify-center">
-          <Link to="/dungeons" className="ink-btn">The dungeons</Link>
-          <Link to="/bestiary" className="ink-btn">The bestiary</Link>
-          <Link to="/" className="ink-btn">Back to the survey</Link>
+      {loading && (
+        <div className="leaf" style={{ padding: "3rem", textAlign: "center" }}>
+          <p className="t-entry">Opening the journal…</p>
         </div>
+      )}
+
+      {!error &&
+        groups.map((g) => {
+          const accent = ACCENT[g.kingdom.id] || "var(--rule-strong)";
+          const written = g.chapters.filter((e) => e.chapter.place && writtenByKey[`${g.kingdom.id}:${e.chapter.place}`]).length;
+          const followed = hunter?.kingdoms?.includes(g.kingdom.id);
+          return (
+            <section key={g.kingdom.id} className="mb-14">
+              <div className="kingdom-banner mb-5" style={{ "--accent": accent }}>
+                <span className="banner-mark"><Mark name={g.kingdom.mark} size={26} /></span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="flex flex-wrap items-baseline gap-x-3">
+                    <h2 className="t-entry">{g.kingdom.name}</h2>
+                    {followed && <span className="t-caps" style={{ color: "var(--rubric)" }}>followed</span>}
+                  </div>
+                  <p className="t-small mt-1">{g.kingdom.gloss}</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="t-caps">{written} of {g.chapters.length} written</p>
+                  <Link to={`/kingdoms/${g.kingdom.id}`} className="t-caps" style={{ color: "var(--rubric)" }}>the map →</Link>
+                </div>
+              </div>
+
+              <div className="spread-book" style={{ "--accent": accent }}>
+                {/* left leaf — the lessons */}
+                <div className="spread-page spread-page--left">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="spread-rubric">The lessons</span>
+                    <span className="t-caps" style={{ color: "var(--ink-faint)" }}>learn where to look</span>
+                  </div>
+                  <div className="mt-4">
+                    {g.chapters.map(({ chapter, number }) => (
+                      <Lesson
+                        key={chapter.title}
+                        chapter={chapter}
+                        number={number}
+                        quest={chapter.place ? writtenByKey[`${g.kingdom.id}:${chapter.place}`] : null}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* right leaf — the trials */}
+                <div className="spread-page spread-page--right">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="spread-rubric">The trials</span>
+                    <span className="t-caps" style={{ color: "var(--ink-faint)" }}>go in and do it</span>
+                  </div>
+                  {g.dungeons.length ? (
+                    <div className="mt-4">
+                      {g.dungeons.map((d) => <Trial key={d.slug} dungeon={d} />)}
+                    </div>
+                  ) : (
+                    <div className="mt-6 flex flex-col items-start gap-3">
+                      <span style={{ color: "var(--ink-faint)" }}><Mark name={g.kingdom.mark} size={30} /></span>
+                      <p className="t-small" style={{ color: "var(--ink-faint)", maxWidth: "34ch" }}>
+                        No trials have been cut in this kingdom yet. Its dungeons are still being dug.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </section>
+          );
+        })}
+
+      <div className="flex flex-col items-center mt-14">
+        <Fleuron width={160} />
+        <p className="t-caps mt-4">Here the quest journal ends, for now</p>
       </div>
     </>
   );

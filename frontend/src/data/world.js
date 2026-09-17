@@ -16,6 +16,8 @@
 export const REALM = {
   title: "The Web Realm",
   survey: "Surveyed from the disclosed accounts of hunters, third revision",
+  // The cartouche holds two short lines; one long line ran out of its frame.
+  surveyLines: ["From hunters' own accounts", "Third revision of the survey"],
   legend: "Roads are the order the ground was first walked. Nothing on this map was drawn from imagination.",
 };
 
@@ -110,11 +112,12 @@ export const PLACES = [
     kind: "tower",
     x: 785, y: 300,
     label: "above",
+    labelDx: -20, // clear of the warning in the sea
     state: "rumoured",
-    domain: "APIs & Trade Routes",
+    domain: "CSRF, CORS & Redirects",
     gloss:
       "From the tower every route in the realm is drawn as a line and named. Some of those lines were never meant to be public.",
-    teaches: ["REST & GraphQL survey", "Mass assignment", "Webhook abuse"],
+    teaches: ["Cross-site request forgery", "CORS misconfiguration", "Open redirect"],
     quests: 5,
     dungeon: null,
   },
@@ -152,11 +155,12 @@ export const PLACES = [
     kind: "keep",
     x: 855, y: 470,
     label: "below",
+    labelDx: -50, // kept inland, clear of the coast
     state: "sealed",
-    domain: "Server & Infrastructure",
+    domain: "Server-Side Flaws",
     gloss:
       "Behind the curtain wall: the stores, the well, and a messenger who will fetch any scroll you name from any library, including the keep's own.",
-    teaches: ["SSRF", "Cloud metadata", "Deserialisation"],
+    teaches: ["SSRF", "File upload", "Path traversal"],
     quests: 5,
     dungeon: "stonewatch-well",
   },
@@ -179,12 +183,12 @@ export const PLACES = [
     name: "The Abyss",
     kind: "abyss",
     x: 930, y: 655,
-    label: "above",
+    label: "below",
     state: "unknown",
-    domain: "Unwritten",
+    domain: "Advanced Techniques",
     gloss:
       "Where the survey stops. Contracts that cannot be amended, devices nobody updates, and the accounts of the hunters who went down to look.",
-    teaches: ["—"],
+    teaches: ["Request smuggling", "Cache poisoning", "Deserialisation"],
     quests: 0,
     dungeon: null,
   },
@@ -212,6 +216,7 @@ export const ROADS = [
 ];
 
 export const STATE_NOTE = {
+  drawn: "On the survey",
   charted: "Walked and written up",
   current: "You stand here",
   rumoured: "Heard of, not walked",

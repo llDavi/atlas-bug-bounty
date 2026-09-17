@@ -19,6 +19,10 @@ STRIPE_PRICE_ID_MONTHLY = os.environ.get("STRIPE_PRICE_ID_MONTHLY", "")
 STRIPE_PRICE_ID_YEARLY = os.environ.get("STRIPE_PRICE_ID_YEARLY", "")
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
+# Postgres connection string (Neon) for hunters and their progress. Empty in
+# local development, where sources/store.py falls back to a SQLite file.
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+
 # Comma-separated list of extra origins allowed to call the API (e.g. a Vercel preview
 # domain or a production custom domain). FRONTEND_URL is always allowed.
 _extra_origins = os.environ.get("EXTRA_CORS_ORIGINS", "")

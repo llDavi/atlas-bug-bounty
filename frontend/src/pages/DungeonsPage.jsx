@@ -155,6 +155,16 @@ export function DungeonPlanMini({ chambers, current = 0 }) {
   );
 }
 
+/* A figure on the page: its label stands clear above it. */
+function Figure({ label, children }) {
+  return (
+    <div>
+      <span className="t-caps label-gap">{label}</span>
+      {children}
+    </div>
+  );
+}
+
 export default function DungeonsPage() {
   return (
     <>
@@ -162,76 +172,61 @@ export default function DungeonsPage() {
         folio={3}
         standing="The third folio"
         title="The Dungeons"
-        gloss="Reading about a gate has never opened one. Below are the places where the work is actually done — five chambers apiece, always the same five, because the work is always the same five."
-        hand="bring notes. the report is the last chamber, not an afterthought"
+        gloss="Reading about a gate has never opened one. The dungeons are where the work is done by hand — five chambers apiece, always the same five, because the work is always the same five."
+        hand="still being dug — the first opens with the next edition of the codex"
       />
 
-      <RuleHead>The five chambers of any descent</RuleHead>
-      <ol className="flex flex-col gap-2 mb-10">
+      <RuleHead no={1}>The five chambers of any descent</RuleHead>
+      <ol className="flex flex-col">
         {CHAMBER_ORDER.map((c) => (
-          <li key={c.no} className="flex gap-4 items-baseline">
-            <span className="t-roman text-[0.8rem]" style={{ minWidth: "2.6rem" }}>{roman(c.no)}</span>
-            <span className="t-title text-xl" style={{ minWidth: "11rem" }}>{c.name}</span>
-            <span className="t-soft flex-1">{c.gloss}</span>
+          <li key={c.no} className="flex flex-wrap gap-x-6 gap-y-1 items-baseline py-4" style={{ borderBottom: "1px solid var(--rule-soft)" }}>
+            <span className="t-roman" style={{ minWidth: "2.6rem", fontSize: "0.85rem" }}>{roman(c.no)}</span>
+            <span className="t-entry" style={{ minWidth: "12rem" }}>{c.name}</span>
+            <span className="t-small flex-1" style={{ minWidth: "16rem" }}>{c.gloss}</span>
           </li>
         ))}
       </ol>
 
-      <hr className="rule rule--double" />
-
+      <RuleHead no={2}>Six ways under the realm</RuleHead>
       <div className="flex flex-col">
         {DUNGEONS.map((d) => {
           const place = placeById(d.place);
-          const sealed = d.state === "sealed";
-          const struck = d.chambers.filter((c) => c.done).length;
           return (
-            <article key={d.slug} className={`entry ${sealed ? "entry--obscured" : ""}`}>
+            <article key={d.slug} className="entry">
               <div className="spread">
                 <div>
-                  <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <p className="t-caps">{d.order}</p>
-                    {place && <span className="t-hand" style={{ fontSize: "1rem" }}>at {place.name}</span>}
-                    {sealed ? <Stamp tone="faint" pressed>Sealed</Stamp> : <Stamp tone="green">Open</Stamp>}
+                  <div className="flex flex-wrap items-baseline gap-x-5 gap-y-2">
+                    <p className="t-eyebrow">{d.order}</p>
+                    {place && <span className="t-hand">at {place.name}</span>}
+                    <Stamp tone="faint">Still being dug</Stamp>
                   </div>
 
-                  <h2 className="t-title text-3xl mt-2 mb-1">{d.name}</h2>
-                  <p className="t-caps mb-4">{d.kind}</p>
+                  <h2 className="t-chapter mt-3">{d.name}</h2>
+                  <p className="t-caps mt-2">{d.kind}</p>
+                  <p className="t-body column mt-5">{d.gloss}</p>
 
-                  <p className="column text-[1.02rem] mb-4">{d.gloss}</p>
-
-                  <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2 mb-5">
-                    <span>
-                      <span className="t-caps block mb-0.5">Difficulty</span>
+                  <div className="flex flex-wrap items-start gap-x-12 gap-y-5 mt-7">
+                    <Figure label="Difficulty">
                       <Stars value={d.difficulty} />
-                    </span>
-                    <span>
-                      <span className="t-caps block mb-0.5">Reward</span>
-                      <span className="t-roman text-[0.95rem]">{d.reward} XP</span>
-                    </span>
-                    <span>
-                      <span className="t-caps block mb-0.5">Reckoned at</span>
-                      <span className="text-[0.95rem]">{d.hours}</span>
-                    </span>
-                    <span>
-                      <span className="t-caps block mb-0.5">Chambers struck</span>
-                      <span className="t-roman text-[0.95rem]">
-                        {struck ? roman(struck) : "—"} of {roman(d.chambers.length)}
-                      </span>
-                    </span>
+                    </Figure>
+                    <Figure label="Reward on the report">
+                      <span className="t-figure">{d.reward} XP</span>
+                    </Figure>
+                    <Figure label="Reckoned at">
+                      <span className="t-body">{d.hours}</span>
+                    </Figure>
                   </div>
 
-                  {sealed ? (
-                    <Link to="/oath" className="ink-btn ink-btn--rubric">Swear the oath to descend</Link>
-                  ) : (
-                    <Link to={`/dungeons/${d.slug}`} className="ink-btn ink-btn--filled">Enter the dungeon</Link>
-                  )}
+                  <div className="mt-8">
+                    <Link to={`/dungeons/${d.slug}`} className="ink-btn">Read the plan</Link>
+                  </div>
                 </div>
 
                 <aside>
                   <div className="slip">
-                    <p className="t-caps mb-2">Plan of the descent</p>
-                    <DungeonPlanMini chambers={d.chambers} current={struck} />
-                    <p className="t-caps mt-2 t-faint">
+                    <span className="t-caps label-gap">Plan of the descent</span>
+                    <DungeonPlanMini chambers={d.chambers} current={-1} />
+                    <p className="t-caps mt-3 t-faint">
                       Depth {roman(d.depth)} · {roman(d.chambers.length)} chambers
                     </p>
                   </div>
@@ -242,9 +237,9 @@ export default function DungeonsPage() {
         })}
       </div>
 
-      <div className="flex flex-col items-center mt-12">
+      <div className="flex flex-col items-center mt-16">
         <Fleuron width={160} />
-        <p className="t-caps mt-3">Six ways under the realm</p>
+        <p className="t-caps mt-4">Six ways under the realm, all still being dug</p>
       </div>
     </>
   );

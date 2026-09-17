@@ -82,7 +82,7 @@
   letter-spacing: 0.16em;
   font-size: 15px;
   fill: var(--ink-strong);
-  pointer-events: none;
+  /* a place's name is part of its target */
   /* the ground is left clear under lettering, as an engraver would */
   paint-order: stroke;
   stroke: var(--survey-bg);
@@ -93,7 +93,6 @@
   font-family: var(--face-hand);
   font-size: 17px;
   fill: var(--indigo);
-  pointer-events: none;
   paint-order: stroke;
   stroke: var(--survey-bg);
   stroke-width: 3.5px;
@@ -127,8 +126,10 @@
 
 .place:hover .place-name { fill: var(--rubric); }
 .place:hover .place-halo { stroke: var(--rubric); opacity: 0.55; }
-.place-halo { fill: none; stroke: transparent; stroke-width: 1; }
+/* painted transparent (not 'none') so the whole circle takes the click */
+.place-halo { fill: transparent; stroke: transparent; stroke-width: 1; pointer-events: all; }
 .place.is-chosen .place-halo { stroke: var(--rubric); opacity: 0.85; stroke-dasharray: 3 3; }
+.place:focus { outline: none; }
 .place:focus-visible .place-halo { stroke: var(--rubric); opacity: 0.85; }
 
 /* ---- lettering on the map ---- */
@@ -150,15 +151,15 @@
 .map-sea-name {
   font-family: var(--face-title);
   font-style: italic;
-  font-size: 26px;
+  font-size: 22px;
   fill: var(--indigo);
   opacity: 0.6;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.12em;
 }
 .map-warning {
   font-family: var(--face-roman);
   text-transform: uppercase;
-  letter-spacing: 0.24em;
+  letter-spacing: 0.16em;
   font-size: 13px;
   fill: var(--rubric);
   opacity: 0.75;
@@ -210,3 +211,25 @@
 @media (min-width: 1000px) {
   .survey-layout { grid-template-columns: minmax(0, 1fr) 19rem; gap: 2rem; }
 }
+
+/* ---- the known world: kingdoms, borders, banners ---- */
+
+.realm-border { fill: none; stroke: var(--ink-soft); stroke-width: 1.1; stroke-dasharray: 2 6; stroke-linecap: round; }
+.realm-land { fill: var(--survey-bg); stroke: var(--ink); stroke-width: 1.6; }
+.realm-name { font-size: 17px; letter-spacing: 0.16em; }
+.realm-flag { fill: none; stroke: var(--rubric); stroke-width: 1.6; }
+.place.is-followed .place-name { fill: var(--rubric); }
+
+/* a chapter's number, set above its place like a plate number */
+.place-index {
+  font-family: var(--face-roman);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  fill: var(--ink-faint);
+  paint-order: stroke;
+  stroke: var(--survey-bg);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+.place-gloss--faint { fill: var(--ink-faint); font-style: italic; opacity: 0.85; }
+

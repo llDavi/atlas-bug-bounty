@@ -39,7 +39,7 @@ export default function OathSwornPage() {
 
           <p className="column mx-auto text-[1.05rem]">
             {sworn
-              ? "Your name is entered in the guild register and the wax is pressed. Every sealed folio and barred ground in this book is open to you from this line onward."
+              ? "Your name is entered in the guild register and the wax is pressed. The full account of every field journal is open to you from this line onward."
               : "The register is being written up — this takes a few seconds, and the page will notice when it is done."}
           </p>
 

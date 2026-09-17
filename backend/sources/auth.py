@@ -48,6 +48,21 @@ def require_auth(credentials: HTTPAuthorizationCredentials | None = Depends(_bea
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc))
 
 
+def optional_auth(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> dict | None:
+    """Dependency: the JWT payload when a valid token is sent, else None.
+
+    For public endpoints that show a signed-in hunter their own progress; a
+    missing or invalid token simply means an anonymous reader.
+    """
+    token = _token_from(credentials)
+    if not token:
+        return None
+    try:
+        return _verify_jwt(token)
+    except jwt.PyJWTError:
+        return None
+
+
 def require_pro(credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)) -> dict:
     """Dependency: raises 401 if not authenticated, 403 if not Pro."""
     token = _token_from(credentials)

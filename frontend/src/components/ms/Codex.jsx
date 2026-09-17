@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { useUser, useClerk, SignInButton } from "@clerk/clerk-react";
-import { HUNTER, rankOf } from "../../data/journal";
+import { rankOf } from "../../data/journal";
+import { useHunter } from "../../hunter-context";
+import { alignmentById } from "../../data/realm";
 import { roman } from "../../utils/numerals";
 import { useLamp } from "../../lamp";
 
@@ -100,11 +102,13 @@ export function Stamp({ children, tone = "", pressed = false, className = "" }) 
 }
 
 /* A wax seal. Broken means the oath was never sworn — or is spent. */
-export function Seal({ size = 62, broken = false, label = "", children }) {
+/* A wax seal. `color` is the wax — each alignment presses its own. Broken
+   means the oath was never sworn, or the seal is spent. */
+export function Seal({ size = 62, broken = false, color, label = "", children }) {
   return (
     <span
       className={`seal ${broken ? "seal--broken" : ""}`}
-      style={{ width: size, height: size }}
+      style={{ width: size, height: size, ...(color && !broken ? { backgroundColor: color } : {}) }}
       aria-label={label || undefined}
     >
       {children || (
@@ -360,7 +364,10 @@ export function CodexHeader() {
   const { pathname } = useLocation();
   const { isSignedIn, user } = useUser();
   const { signOut } = useClerk();
-  const { level, rank, next, pct } = rankOf(HUNTER.xp);
+  const { status, hunter } = useHunter();
+  const xp = hunter?.xp ?? 0;
+  const { level, rank, next, pct } = rankOf(xp);
+  const alignment = alignmentById(hunter?.alignment);
   const sworn = user?.publicMetadata?.is_pro === true;
 
   const here = (to) => (to === "/" ? pathname === "/" : pathname.startsWith(to));
@@ -382,15 +389,24 @@ export function CodexHeader() {
           {isSignedIn ? (
             <div className="flex items-end gap-4">
               <LampToggle />
-              <Link to="/character" className="text-right">
-                <span className="t-title block text-[1.05rem] leading-tight">
-                  {user?.firstName || HUNTER.name}
-                </span>
-                <span className="t-caps block">
-                  {rank.title} · Lvl {level}
-                  {sworn && " · Sworn"}
-                </span>
-              </Link>
+              {status === "ready" ? (
+                <Link to="/character" className="flex items-center gap-3 text-right">
+                  <span>
+                    <span className="t-title block text-[1.05rem] leading-tight">{hunter.name}</span>
+                    <span className="t-caps block">
+                      {rank.title} · Lvl {level}
+                      {sworn && " · Sworn"}
+                    </span>
+                  </span>
+                  <Seal size={30} color={alignment?.seal} label={alignment?.en} />
+                </Link>
+              ) : status === "unregistered" ? (
+                <Link to="/register" className="ink-btn ink-btn--small ink-btn--rubric">
+                  Sign the register
+                </Link>
+              ) : (
+                <span className="t-caps">{user?.firstName}</span>
+              )}
               <button type="button" onClick={() => signOut()} className="ink-btn ink-btn--small">
                 Close the book
               </button>
@@ -418,15 +434,17 @@ export function CodexHeader() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto sm:justify-end">
-            <span className="t-caps">XP</span>
-            <span style={{ width: 84 }}>
-              <Measure pct={pct} cells={8} />
-            </span>
-            <span className="t-tech t-soft">
-              {HUNTER.xp.toLocaleString("en-US")}/{(next?.xpReq ?? HUNTER.xp).toLocaleString("en-US")}
-            </span>
-          </div>
+          {status === "ready" && (
+            <div className="flex items-center gap-2 shrink-0 w-full sm:w-auto sm:justify-end">
+              <span className="t-caps">XP</span>
+              <span style={{ width: 84 }}>
+                <Measure pct={pct} cells={8} />
+              </span>
+              <span className="t-tech t-soft">
+                {xp.toLocaleString("en-US")}/{(next?.xpReq ?? xp).toLocaleString("en-US")}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -16,6 +16,12 @@ import OathPage from "./pages/OathPage";
 import OathSwornPage from "./pages/OathSwornPage";
 import CharterPage from "./pages/CharterPage";
 import QuestionsPage from "./pages/QuestionsPage";
+import QuestPage from "./pages/QuestPage";
+import KingdomPage from "./pages/KingdomPage";
+import RegisterPage from "./pages/RegisterPage";
+import RequireHunter from "./RequireHunter";
+import HunterProvider from "./HunterProvider";
+import { useHunter } from "./hunter-context";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
@@ -30,6 +36,15 @@ function TurnToTop() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+  return null;
+}
+
+/* A reader who signed in but never signed the register is sent to sign it
+   before anything else — that page is the start of their book. */
+function RegisterGate() {
+  const { status } = useHunter();
+  const { pathname } = useLocation();
+  if (status === "unregistered" && pathname !== "/register") return <Navigate to="/register" replace />;
   return null;
 }
 
@@ -51,8 +66,9 @@ function NotFound() {
 }
 
 export default function App() {
-  /* The registry is copied from the aggregator; everything else in the book
-     is local until the backend catches up. */
+  /* The registry is copied from the aggregator; the hunter and their quests
+     come from the register (HunterProvider); the rest of the book is still
+     local until the backend catches up. */
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,15 +86,20 @@ export default function App() {
   }, []);
 
   return (
+    <HunterProvider>
     <div className="codex">
       <TurnToTop />
+      <RegisterGate />
       <CodexHeader />
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-8" style={{ paddingBlock: "2.5rem" }}>
+      <main className="codex-main max-w-6xl mx-auto px-4 sm:px-8" style={{ paddingBlock: "2.5rem" }}>
         <Routes>
           <Route path="/" element={<MapPage />} />
 
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/kingdoms/:id" element={<KingdomPage />} />
           <Route path="/quests" element={<QuestsPage />} />
+          <Route path="/quests/:slug" element={<RequireHunter what="this quest"><QuestPage /></RequireHunter>} />
           <Route path="/dungeons" element={<DungeonsPage />} />
           <Route path="/dungeons/:slug" element={<DungeonPage />} />
           <Route path="/bestiary" element={<BestiaryPage />} />
@@ -132,5 +153,6 @@ export default function App() {
 
       <Colophon />
     </div>
+    </HunterProvider>
   );
 }
