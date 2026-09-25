@@ -502,13 +502,7 @@ function PlaceReading({ p, quests, onClose }) {
       </div>
 
       <div className="flex flex-col gap-3 mt-6">
-        {quests.length ? (
-          <Link to={`/quests/${quests[0].slug}`} className="ink-btn ink-btn--filled">Read the quest</Link>
-        ) : null}
-        <Link to={`/kingdoms/web/${p.id}`} className={`ink-btn ${quests.length ? "" : "ink-btn--filled"}`}>Open the chapter</Link>
-        {dungeons[0] && !barred && (
-          <Link to={`/dungeons/${dungeons[0].slug}`} className="ink-btn">The plan of {dungeons[0].name}</Link>
-        )}
+        <Link to={`/kingdoms/web/${p.id}`} className="ink-btn ink-btn--filled">Open the chapter</Link>
       </div>
     </div>
   );

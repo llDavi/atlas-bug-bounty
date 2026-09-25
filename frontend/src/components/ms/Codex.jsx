@@ -354,8 +354,6 @@ const CHAPTERS = [
   { label: "Quests", to: "/quests" },
   { label: "Dungeons", to: "/dungeons" },
   { label: "Bestiary", to: "/bestiary" },
-  { label: "Field Journals", to: "/journals" },
-  { label: "Registry", to: "/registry" },
   { label: "Character", to: "/character" },
   { label: "The Roll", to: "/roll" },
 ];

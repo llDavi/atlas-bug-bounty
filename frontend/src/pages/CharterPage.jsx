@@ -9,7 +9,7 @@ import { roman } from "../utils/numerals";
 const REFUSALS = [
   ["We do not hand over the answer", "Knowing a beast is called SSRF has never found one. Every quest is worded so you must ask what the builder assumed."],
   ["We do not invent accounts", "Every field journal began as a publicly disclosed report, and is credited to the hunter who wrote it."],
-  ["We do not rank by reward", "The registry grades ground by how approachable it actually is: scope, competition, the barrier of the stack, and how well the keeper answers."],
+  ["We do not gate the map", "Anyone can walk the whole survey — every kingdom, chapter and beast — without signing. Only the modules themselves and a place on the roll ask for your name."],
   ["We do not teach trespass", "The first article of the oath is the boundary, and the second is restraint in proof. Both are the work, not a disclaimer."],
 ];
 
@@ -63,9 +63,8 @@ export default function CharterPage() {
             <div className="flex flex-col gap-1">
               <Leader label="The survey of the realm" value="Drawn" />
               <Leader label="The quest journal" value="Being written" />
-              <Leader label="The dungeons" value="Three of six open" />
+              <Leader label="The dungeons" value="Being dug" />
               <Leader label="The bestiary" value="Eight plates" />
-              <Leader label="The registry" value="Recopied daily" />
               <Leader label="Ranks & experience" value="Taking shape" />
             </div>
             <aside>

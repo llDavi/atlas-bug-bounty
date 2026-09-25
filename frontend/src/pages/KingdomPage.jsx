@@ -37,7 +37,6 @@ function ChapterLedger({ kingdomId, quests }) {
             <th style={{ minWidth: "16rem" }}>Chapter</th>
             <th style={{ width: "6rem" }}>Lessons</th>
             <th style={{ width: "13rem" }}>Standing</th>
-            <th style={{ width: "7rem" }} />
           </tr>
         </thead>
         <tbody>
@@ -63,9 +62,6 @@ function ChapterLedger({ kingdomId, quests }) {
                   ) : (
                     <Stamp tone="faint">Being written</Stamp>
                   )}
-                </td>
-                <td>
-                  <Link to={`/kingdoms/${kingdomId}/${c.place}`} className="t-caps">Open →</Link>
                 </td>
               </tr>
             );
@@ -127,7 +123,6 @@ export default function KingdomPage() {
 
       <div className="flex flex-col items-center mt-16">
         <Fleuron width={150} />
-        <Link to="/" className="ink-btn mt-6">Back to the known world</Link>
       </div>
     </>
   );

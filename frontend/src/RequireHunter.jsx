@@ -16,8 +16,7 @@ export default function RequireHunter({ children, what = "this folio" }) {
 
   if (status === "ready") return children;
 
-  // Signed in but not yet registered: RegisterGate sends them to /register.
-  if (status === "loading" || status === "unregistered") {
+  if (status === "loading") {
     return (
       <div className="leaf" style={{ padding: "3rem", textAlign: "center" }}>
         <p className="t-entry">The clerk is checking the register…</p>
@@ -30,6 +29,35 @@ export default function RequireHunter({ children, what = "this folio" }) {
       <div className="leaf" style={{ padding: "2.6rem" }}>
         <p className="t-eyebrow">The register is not answering</p>
         <p className="t-entry mt-3">Try again in a moment.</p>
+      </div>
+    );
+  }
+
+  // Signed in, but has not signed the register yet: one step to go.
+  if (status === "unregistered") {
+    return (
+      <div className="mx-auto" style={{ maxWidth: "42rem" }}>
+        <div className="quire">
+          <div className="leaf leaf--chapter leaf--ruled">
+            <div className="leaf-field text-center">
+              <div className="flex justify-center"><Seal size={80} broken label="Unsigned" /></div>
+              <p className="t-eyebrow mt-6">Signed in — one step to go</p>
+              <h1 className="t-chapter mt-3">Sign the register to open {what}</h1>
+              <Fleuron width={150} className="ornament--center" />
+              <p className="t-body column mx-auto">
+                You are signed in, but you have not signed the register yet — choose your class and
+                swear the oath, and {what} opens. It takes a moment, and the book keeps your
+                progress from then on.
+              </p>
+              <Link to="/register" className="ink-btn ink-btn--filled mt-8">Sign the register</Link>
+              <p className="t-small mt-8">
+                Not yet: <Link to="/" className="ink-link">the kingdoms</Link> ·{" "}
+                <Link to="/roll" className="ink-link">the roll</Link> ·{" "}
+                <Link to="/bestiary" className="ink-link">the bestiary</Link>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }

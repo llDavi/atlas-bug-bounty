@@ -17,11 +17,6 @@ const GRANTS = [
     title: "Every field journal, unsealed",
     text: "The whole survey, the turn, the chain, the proof and the filed account of every hunt in the archive.",
   },
-  {
-    mark: "raven",
-    title: "Word from the registry",
-    text: "Hunters already on the ground, reports resolved, how fast a keeper answers, and whether there is a wall before the walls.",
-  },
 ];
 
 const ARTICLES = [
@@ -65,8 +60,7 @@ export default function OathPage() {
           <h1 className="t-title text-4xl mt-5 mb-2">You are sworn to the guild.</h1>
           <Fleuron width={170} className="ornament--center" />
           <p className="column mx-auto">
-            The full account of every field journal in the archive is open to you, and the
-            registry keeps its intelligence for you too.
+            The full account of every field journal in the archive is open to you.
           </p>
           <div className="flex flex-wrap gap-3 justify-center mt-6">
             <Link to="/journals" className="ink-btn ink-btn--filled">Open the archive</Link>

@@ -16,7 +16,7 @@ const QUESTIONS = [
   },
   {
     q: "Is it free?",
-    a: "Signing the register is free, and so are the quests, the bestiary and the roll. The oath unseals the full account in every field journal, and the registry's own intelligence.",
+    a: "Signing the register is free, and so are the quests, the bestiary and the roll. The oath unseals the full account in every field journal.",
   },
   {
     q: "Why does no quest say where the flaw is?",

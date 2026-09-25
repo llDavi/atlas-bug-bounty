@@ -44,7 +44,15 @@ function appearanceFor(night) {
 export default function ClerkBound({ children }) {
   const { night } = useLamp();
   return (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} appearance={appearanceFor(night)}>
+    <ClerkProvider
+      publishableKey={PUBLISHABLE_KEY}
+      appearance={appearanceFor(night)}
+      /* After signing in or up, take the reader straight to the register to
+         choose their class; if they are already registered, /register sends
+         them on to the survey. Browsing is never forced through it. */
+      signInForceRedirectUrl="/register"
+      signUpForceRedirectUrl="/register"
+    >
       {children}
     </ClerkProvider>
   );

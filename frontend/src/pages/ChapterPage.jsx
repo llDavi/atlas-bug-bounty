@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { PageHead, RuleHead, Stamp, Fleuron, Mark } from "../components/ms/Codex";
+import { PageHead, RuleHead, Stamp, Fleuron } from "../components/ms/Codex";
 import { roman } from "../utils/numerals";
 import { kingdomById } from "../data/realm";
 import { chaptersWithBoss, chaptersOf } from "../data/chapters";
@@ -50,7 +50,10 @@ export default function ChapterPage() {
 
   const isBoss = Boolean(chapter.finalBoss);
   const number = index + 1;
-  const quest = (quests || []).find((q) => q.place === chapter.place && q.kingdom === id);
+  // A chapter holds several lessons: every quest written at this place, in order.
+  const lessons = (quests || [])
+    .filter((q) => q.place === chapter.place && q.kingdom === id)
+    .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   const dungeons = dungeonsAtPlace(chapter.place);
   const dungeon = dungeons[0] || null;
 
@@ -61,7 +64,7 @@ export default function ChapterPage() {
       <PageHead
         standing={isBoss ? `${kingdom.name} · Final Boss` : `${kingdom.name} · Chapter ${roman(number)} of ${chaptersOf(id).length}`}
         title={chapter.title}
-        gloss={chapter.finalBoss ? chapter.brief : `${chapter.real}. ${chapter.topics.length} lessons walked in order, then the trial that proves them.`}
+        gloss={chapter.finalBoss ? chapter.brief : `${chapter.real}. Its ground is ${chapter.topics.length} topics, gathered into the lessons below, then a trial to prove them.`}
       />
 
       {isBoss ? (
@@ -86,17 +89,65 @@ export default function ChapterPage() {
           </ol>
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <Stamp tone="rubric">Final Boss</Stamp>
-            <Stamp tone="faint">Being written</Stamp>
+            {lessons.length === 0 && <Stamp tone="faint">Being written</Stamp>}
           </div>
+          {lessons.map((l) => (
+            <div key={l.slug} className="mt-8 flex flex-wrap items-center justify-between gap-6">
+              <div style={{ flex: 1, minWidth: "16rem" }}>
+                <h3 className="t-entry">{l.title}</h3>
+                {l.summary && <p className="t-small column mt-1.5">{l.summary}</p>}
+              </div>
+              <div className="flex items-center gap-5 shrink-0">
+                <span className="t-figure">{l.xp} XP</span>
+                <Link to={`/quests/${l.slug}`} className="ink-btn ink-btn--rubric">
+                  {l.status === "completed" ? "Walk it again" : "Walk the final trial"}
+                </Link>
+              </div>
+            </div>
+          ))}
         </>
       ) : (
         <>
-          <RuleHead no={1}>The lessons of this chapter</RuleHead>
+          <RuleHead no={1}>The lessons</RuleHead>
           <p className="t-body column-wide">
-            The chapter is walked as these lessons, in order. Each teaches you one thing to look for;
-            together they are the ground of <span style={{ fontStyle: "italic" }}>{chapter.real}</span>.
+            The chapter is walked as these lessons, in order. Each gathers a few of its topics into
+            one reading, with the questions set into the text.
           </p>
-          <ol className="topic-grid mt-7">
+          {lessons.length ? (
+            <div className="flex flex-col mt-6">
+              {lessons.map((l, i) => (
+                <article key={l.slug} className="entry">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3">
+                    <div style={{ flex: 1, minWidth: "16rem" }}>
+                      <p className="t-roman" style={{ fontSize: "0.8rem" }}>Lesson {roman(i + 1)}</p>
+                      <h3 className="t-entry mt-1">{l.title}</h3>
+                      {l.summary && <p className="t-small column mt-1.5">{l.summary}</p>}
+                    </div>
+                    <div className="flex items-center gap-5 shrink-0">
+                      <span className="t-figure">{l.xp} XP</span>
+                      <Link
+                        to={`/quests/${l.slug}`}
+                        className={`ink-btn ink-btn--small ${l.status === "available" ? "ink-btn--filled" : ""}`}
+                      >
+                        {l.status === "completed" ? "Read again" : l.status === "available" ? "Begin" : "Read the lesson"}
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6">
+              <Stamp tone="faint">Being written</Stamp>
+              <p className="t-small column mt-3">The lessons for this chapter are still being written. Its ground is set out below.</p>
+            </div>
+          )}
+
+          <RuleHead no={2}>The ground it covers</RuleHead>
+          <p className="t-body column-wide">
+            Every topic of <span style={{ fontStyle: "italic" }}>{chapter.real}</span>, in the order it is learned.
+          </p>
+          <ol className="topic-grid mt-6">
             {chapter.topics.map((t, i) => (
               <li key={t} className="topic">
                 <span className="topic-no">{String(i + 1).padStart(2, "0")}</span>
@@ -105,51 +156,25 @@ export default function ChapterPage() {
             ))}
           </ol>
 
-          <RuleHead no={2}>Walk it</RuleHead>
-          <div className="flex flex-wrap items-start gap-x-14 gap-y-8">
-            <div style={{ flex: 1, minWidth: "16rem" }}>
-              <p className="t-caps label-gap">The quest · learn</p>
-              {quest ? (
-                <>
-                  <p className="t-small column">Read the passage and answer the questions set into it. {quest.xp} XP.</p>
-                  <Link to={`/quests/${quest.slug}`} className="ink-btn ink-btn--filled mt-5">
-                    {quest.status === "completed" ? "Read it again" : "Begin the quest"}
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <p className="t-small column">Its quest is still being copied into the journal.</p>
-                  <div className="mt-4"><Stamp tone="faint">Being written</Stamp></div>
-                </>
-              )}
+          <RuleHead no={3}>The trial · prove</RuleHead>
+          {dungeon ? (
+            <div className="flex flex-wrap items-start justify-between gap-6">
+              <p className="t-body column">{dungeon.name} — go in and do the work for real, through its five chambers.</p>
+              <Link to={`/dungeons/${dungeon.slug}`} className="ink-btn shrink-0">The plan of {dungeon.name}</Link>
             </div>
-
-            <div style={{ flex: 1, minWidth: "16rem" }}>
-              <p className="t-caps label-gap">The trial · prove</p>
-              {dungeon ? (
-                <>
-                  <p className="t-small column">{dungeon.name} — go in and do the work for real, through its five chambers.</p>
-                  <Link to={`/dungeons/${dungeon.slug}`} className="ink-btn mt-5">The plan of {dungeon.name}</Link>
-                </>
-              ) : chapter.trial ? (
-                <>
-                  <p className="t-small column">{chapter.trial.kind === "dungeon" ? "A dungeon" : "A boss"}: {chapter.trial.brief}</p>
-                  <div className="mt-4"><Stamp tone="faint">Being dug</Stamp></div>
-                </>
-              ) : (
-                <p className="t-small column" style={{ color: "var(--ink-faint)" }}>No trial is set for this chapter.</p>
-              )}
+          ) : chapter.trial ? (
+            <div>
+              <p className="t-body column">{chapter.trial.kind === "dungeon" ? "A dungeon" : "A boss"}: {chapter.trial.brief}</p>
+              <div className="mt-4"><Stamp tone="faint">Being dug</Stamp></div>
             </div>
-          </div>
+          ) : (
+            <p className="t-body column" style={{ color: "var(--ink-faint)" }}>No trial is set for this chapter.</p>
+          )}
         </>
       )}
 
       <div className="flex flex-col items-center mt-16">
         <Fleuron width={150} />
-        <div className="flex items-center gap-3 mt-5">
-          <span style={{ color: "var(--ink-faint)" }}><Mark name={kingdom.mark} size={22} /></span>
-          <Link to={`/kingdoms/${kingdom.id}`} className="t-caps" style={{ color: "var(--rubric)" }}>Back to {kingdom.name}</Link>
-        </div>
       </div>
     </>
   );

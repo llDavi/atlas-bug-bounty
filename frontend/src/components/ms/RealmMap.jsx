@@ -271,12 +271,9 @@ export default function RealmMap({ kingdomId, quests = [] }) {
                   <Stamp tone={chapterQuest ? "" : "faint"}>{chapterQuest ? "Quest written" : "Being written"}</Stamp>
                   {chapter.trial && <Stamp tone="faint">{chapter.trial.kind === "dungeon" ? "Dungeon" : "Boss"} at its end</Stamp>}
                 </div>
-                {chapterQuest && (
-                  <Link to={`/quests/${chapterQuest.slug}`} className="ink-btn ink-btn--filled w-full mt-6">Read the quest</Link>
-                )}
               </>
             )}
-            <Link to={`/kingdoms/${kingdomId}/${chapter.place}`} className="ink-btn w-full mt-3">
+            <Link to={`/kingdoms/${kingdomId}/${chapter.place}`} className="ink-btn ink-btn--filled w-full mt-6">
               {chapter.finalBoss ? "The final trial" : "Open the chapter"}
             </Link>
           </div>

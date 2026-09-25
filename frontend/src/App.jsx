@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Routes, Route, Navigate, useParams, useLocation, Link } from "react-router-dom";
 import { CodexHeader, Colophon, Fleuron } from "./components/ms/Codex";
 import MapPage from "./pages/MapPage";
@@ -8,8 +8,6 @@ import DungeonPage from "./pages/DungeonPage";
 import BestiaryPage from "./pages/BestiaryPage";
 import JournalsPage from "./pages/JournalsPage";
 import JournalPage from "./pages/JournalPage";
-import RegistryPage from "./pages/RegistryPage";
-import RegistryEntryPage from "./pages/RegistryEntryPage";
 import CharacterPage from "./pages/CharacterPage";
 import RollPage from "./pages/RollPage";
 import OathPage from "./pages/OathPage";
@@ -22,9 +20,6 @@ import ChapterPage from "./pages/ChapterPage";
 import RegisterPage from "./pages/RegisterPage";
 import RequireHunter from "./RequireHunter";
 import HunterProvider from "./HunterProvider";
-import { useHunter } from "./hunter-context";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 /* Old links, kept honest: the paths this book used to be bound under. */
 function MovedTo({ to, param }) {
@@ -37,15 +32,6 @@ function TurnToTop() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
-  return null;
-}
-
-/* A reader who signed in but never signed the register is sent to sign it
-   before anything else — that page is the start of their book. */
-function RegisterGate() {
-  const { status } = useHunter();
-  const { pathname } = useLocation();
-  if (status === "unregistered" && pathname !== "/register") return <Navigate to="/register" replace />;
   return null;
 }
 
@@ -67,30 +53,10 @@ function NotFound() {
 }
 
 export default function App() {
-  /* The registry is copied from the aggregator; the hunter and their quests
-     come from the register (HunterProvider); the rest of the book is still
-     local until the backend catches up. */
-  const [programs, setPrograms] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    fetch(`${API_URL}/api/programs`)
-      .then((res) => {
-        if (!res.ok) throw new Error("The register could not be read.");
-        return res.json();
-      })
-      .then((data) => setPrograms(Array.isArray(data) ? data : []))
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, []);
-
   return (
     <HunterProvider>
     <div className="codex">
       <TurnToTop />
-      <RegisterGate />
       <CodexHeader />
 
       <main className="codex-main max-w-6xl mx-auto px-4 sm:px-8" style={{ paddingBlock: "2.5rem" }}>
@@ -109,23 +75,6 @@ export default function App() {
           <Route path="/journals" element={<JournalsPage />} />
           <Route path="/journals/:slug" element={<JournalPage />} />
 
-          <Route
-            path="/registry"
-            element={
-              <RegistryPage
-                programs={programs}
-                loading={loading}
-                error={error}
-                search={search}
-                onSearchChange={setSearch}
-              />
-            }
-          />
-          <Route
-            path="/registry/:id"
-            element={<RegistryEntryPage programs={programs} loading={loading} />}
-          />
-
           <Route path="/character" element={<CharacterPage />} />
           <Route path="/roll" element={<RollPage />} />
 
@@ -138,8 +87,9 @@ export default function App() {
           {/* --- where the book was bound before --- */}
           <Route path="/pro" element={<OathPage />} />
           <Route path="/pro/success" element={<OathSwornPage />} />
-          <Route path="/programs" element={<MovedTo to="/registry" />} />
-          <Route path="/programs/:id" element={<MovedTo to="/registry" param="id" />} />
+          <Route path="/registry" element={<MovedTo to="/" />} />
+          <Route path="/registry/:id" element={<MovedTo to="/" />} />
+          <Route path="/programs" element={<MovedTo to="/" />} />
           <Route path="/walkthroughs" element={<MovedTo to="/journals" />} />
           <Route path="/walkthroughs/:slug" element={<MovedTo to="/journals" param="slug" />} />
           <Route path="/academy" element={<MovedTo to="/bestiary" />} />
